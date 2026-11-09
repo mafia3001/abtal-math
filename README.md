@@ -30,3 +30,6 @@
 **Settings ← Pages ← Deploy from a branch ← main / (root) ← Save**
 
 الرابط بعد التفعيل: https://mafia3001.github.io/abtal-math/
+
+## إضافة دروس جديدة
+أرسل صورة صفحة الدرس من الكتاب إلى Claude، وسيضيف الدرس بنفس الطريقة وينشره مباشرة على الرابط نفسه. تعليمات الإضافة في ملف `CLAUDE.md`.
