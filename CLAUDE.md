@@ -17,12 +17,13 @@ The owner usually sends photos of a textbook page. Match the book's method, word
 If a new lesson needs something the table can't show (hundreds, word problems, comparing numbers), ask the owner before changing the layout.
 
 ## Source book
-The owner's textbook is Saudi Grade 2 Math, semester 1 (1446). A text conversion of the PDF is mostly unreadable (the Arabic font exports as glyph codes), so lesson numbers are only known for chapter 5 (from photos). Lessons not yet in the app and waiting on the owner's go-ahead because they need a different screen: data (tally, pictographs, bar graphs), probability (certain/impossible, more/less likely), estimating sums and differences by rounding to the nearest ten, and word-problem strategy lessons.
+Saudi Grade 2 Math, semester 1 (1446), six chapters. Page images are in the owner's Google Drive folder "Math" (folder id `1saiftMHy8n2pURF8tDd8soagkZYZ9g4P`, files `Math (1) conv N.png`); Drive's `read_file_content` returns OCR text, and each lesson's page footer reads `الدرس ف-د : name`. Every book lesson is in `LEVELS` with its `tag`. `conv 1` is the second contents page (chapters 4–6); the first contents page is not in the folder.
 
 ## Question types
 - Default (no `type`): an operation in the tens/ones table, built from `op` and `nums`.
 - `type:'num'`: the child writes one number (`answer`) in a tens/ones answer row. `title` is the instruction and `show` is HTML above the table (blocks, number words, a sequence via `seqHTML`).
-- `type:'choice'`: tap one of `choices` (HTML strings); `correct` is the right index. Used for comparing (`relHTML`) and estimating.
+- `type:'choice'`: tap one of `choices` (HTML strings); `correct` is the right index. Used for comparing (`relHTML`), estimating, place value of a digit, data questions and chance.
+- Word problems: `storyP(text, answer, sx)` builds a `num` question whose explanation (`SPECIAL.story`) uses `sx.nums`, `sx.op` and `sx.need`. Data lessons use `makeData`, `tallyTable`, `pictTable` and `barSVG`; chance lessons use `bagHTML`.
 Comparison symbols are written logically (`a > b`) inside RTL text, so the browser mirrors them and the open side always faces the larger number. Keep them inside `dir="rtl"`.
 
 ## Conventions

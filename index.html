@@ -173,6 +173,30 @@ button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .scatter .cube{width:14px;height:14px}
 .cmp-row{direction:rtl;display:flex;gap:18px;justify-content:center;align-items:flex-end;flex-wrap:wrap}
 .cmp-row>div{display:flex;flex-direction:column;align-items:center;gap:4px}
+.story{margin:0;font-size:1.12rem;line-height:1.9;text-align:right;background:var(--surface-2);border-radius:12px;padding:10px 14px;width:100%}
+.dt{border-collapse:collapse;font-size:1rem;margin:0 auto}
+.dt th,.dt td{border:1.5px solid var(--line);padding:4px 10px;text-align:center}
+.dt th{background:var(--surface-2);font-weight:700}
+.dt td.q{color:var(--accent);font-weight:800}
+.dt td.num,.dt th.num{font-family:var(--f-display);font-weight:700;font-size:1.15rem}
+.tl{display:inline-flex;gap:6px;vertical-align:middle;color:var(--ink);direction:ltr}
+.tl svg{display:block}
+.pic{display:inline-block;width:16px;height:16px;border-radius:50%;background:var(--tens);margin:1px}
+.picrow{display:flex;flex-wrap:wrap;gap:1px;direction:rtl;max-width:230px}
+.chart{width:100%;max-width:330px;color:var(--ink)}
+.bag{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:260px;padding:12px;border:2.5px solid var(--line);border-radius:18px 18px 40px 40px;background:var(--surface-2)}
+.ball{width:26px;height:26px;border-radius:50%;box-shadow:inset -3px -4px 0 rgba(0,0,0,.18)}
+.ball.red{background:#E0533D}.ball.blue{background:#2F6FDE}.ball.green{background:#2E9E5B}.ball.yellow{background:#E9B200}
+.hl-digit{color:var(--bad);text-decoration:underline;text-underline-offset:6px}
+.mbox{display:inline-block;min-width:1.6em;border:2.5px dashed var(--accent);border-radius:8px;color:var(--accent)}
+details.chap{background:var(--surface);border:2px solid var(--line);border-radius:18px}
+details.chap>summary{list-style:none;cursor:pointer;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+details.chap>summary::-webkit-details-marker{display:none}
+details.chap>summary h2{font-size:1.1rem;font-weight:800;margin:0}
+details.chap>summary small{color:var(--muted);font-weight:600;white-space:nowrap}
+details.chap>summary::after{content:"▾";font-size:1.2rem;color:var(--muted);transition:transform .2s}
+details.chap[open]>summary::after{transform:rotate(180deg)}
+details.chap>.levels{padding:0 10px 12px}
 .nl{direction:ltr;display:flex;flex-wrap:wrap;gap:3px;justify-content:center;width:100%}
 .nlc{display:flex;flex-direction:column;align-items:center;min-width:30px}
 .nlc .hop{font-size:.8rem;font-weight:700;color:var(--accent);height:1.3em;line-height:1.3em}
@@ -282,6 +306,51 @@ function seqHTML(arr,opt={}){
 }
 function relHTML(a,b,i){return `<span dir="rtl">${ar(a)} ${['>','<','='][i]} ${ar(b)}</span>`}
 
+/* ---------- data, stories and other helpers ---------- */
+const round10=n=>Math.round(n/10)*10;
+const NAMES=[['أحمد',1],['سارة',0],['يوسف',1],['ليلى',0],['فهد',1],['نورة',0],['خالد',1],['منى',0],['سعد',1],['ريم',0]];
+const THINGS=['الأقلام','الكرات','الكتب','البالونات','الوردات','الملصقات','السيارات الصغيرة','الأزرار'];
+const person=()=>{const[n,m]=pick(NAMES);return{n,m,h:m?'ه':'ها',v:(a,b)=>m?a:b}};
+function twoPeople(){let a,b;do{a=person();b=person()}while(a.n===b.n);return[a,b]}
+const storyShow=t=>`<p class="story">${t}</p>`;
+function storyP(text,ans,sx,key){return{type:'num',answer:ans,m:'story',title:'أحل المسألة',show:storyShow(text),sx,key:key||('st'+text.length+ans+Math.random().toString(36).slice(2,6))}}
+const DATA_SETS=[
+  {topic:'الفاكهة المفضلة لطلاب الصف',cats:['التفاح','الموز','البرتقال','العنب'],L:c=>`من يفضّلون ${c}`,unit:'طالب'},
+  {topic:'الرياضة المفضلة لطلاب الصف',cats:['كرة القدم','السباحة','الجري','الدراجة'],L:c=>`من يفضّلون ${c}`,unit:'طالب'},
+  {topic:'اللون المفضل لطلاب الصف',cats:['الأحمر','الأزرق','الأخضر','الأصفر'],L:c=>`من يفضّلون اللون ${c}`,unit:'طالب'},
+  {topic:'الحيوانات في المزرعة',cats:['الأبقار','الأغنام','الدجاج','الخيول'],L:c=>c,unit:'حيوان'},
+];
+function makeData(max=12){
+  const set=pick(DATA_SETS),n=pick([3,4]),cats=set.cats.slice(0,n);
+  const vals=[];while(vals.length<n){const v=rnd(2,max);if(!vals.includes(v))vals.push(v)}
+  return{set,cats,vals};
+}
+function tallySVG(n){
+  const g=[];let left=n;
+  while(left>0){const k=Math.min(5,left);left-=k;
+    let lines='';for(let i=0;i<Math.min(k,4);i++){const x=5+i*6;lines+=`<line x1="${x}" y1="3" x2="${x}" y2="25"/>`}
+    if(k===5)lines+=`<line x1="1" y1="21" x2="27" y2="7"/>`;
+    g.push(`<svg width="30" height="28" viewBox="0 0 30 28" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">${lines}</svg>`)}
+  return `<span class="tl">${g.join('')}</span>`;
+}
+function tallyTable(d){return `<table class="dt" dir="rtl"><tr><th>${d.set.unit==='حيوان'?'الحيوان':'الاختيار'}</th><th>إشارات العدّ</th></tr>${d.cats.map((c,i)=>`<tr><td>${c}</td><td>${tallySVG(d.vals[i])}</td></tr>`).join('')}</table>`}
+function pictTable(d){return `<table class="dt" dir="rtl"><tr><th>${d.set.unit==='حيوان'?'الحيوان':'الاختيار'}</th><th>العدد</th></tr>${d.cats.map((c,i)=>`<tr><td>${c}</td><td><div class="picrow">${'<span class="pic"></span>'.repeat(d.vals[i])}</div></td></tr>`).join('')}</table><div class="blabel">كل <span class="pic" style="width:12px;height:12px;vertical-align:middle"></span> يمثّل ${d.set.unit==='حيوان'?'حيوانًا واحدًا':'طالبًا واحدًا'}</div>`}
+function barSVG(d,hi=-1){
+  const W=330,H=230,top=12,bottom=40,axisX=W-40,left=8,n=d.cats.length;
+  const max=Math.max(...d.vals),scale=max<=10?10:Math.ceil(max/2)*2,ph=H-top-bottom,step=2;
+  let g='';
+  for(let v=0;v<=scale;v++){const y=top+ph-ph*v/scale;g+=`<line x1="${left}" y1="${y}" x2="${axisX}" y2="${y}" stroke="var(--line)" stroke-width="${v%step===0?1.2:.6}"/>`;
+    if(v%step===0)g+=`<text x="${axisX+8}" y="${y+5}" font-size="14" font-weight="700" fill="currentColor">${ar(v)}</text>`}
+  const slot=(axisX-left)/n,bw=Math.min(40,slot*.55);
+  d.cats.forEach((c,i)=>{const x=axisX-slot*(i+.5),h=ph*d.vals[i]/scale;
+    g+=`<rect x="${x-bw/2}" y="${top+ph-h}" width="${bw}" height="${h}" rx="3" fill="${i===hi?'var(--accent)':'var(--tens)'}"/>`;
+    g+=`<text x="${x}" y="${H-bottom+18}" font-size="13" text-anchor="middle" fill="currentColor">${c}</text>`});
+  g+=`<line x1="${axisX}" y1="${top}" x2="${axisX}" y2="${top+ph}" stroke="currentColor" stroke-width="1.5"/>`;
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${d.set.topic}">${g}</svg>`;
+}
+const COLORS=[{k:'red',n:'الأحمر',f:'حمراء'},{k:'blue',n:'الأزرق',f:'زرقاء'},{k:'green',n:'الأخضر',f:'خضراء'},{k:'yellow',n:'الأصفر',f:'صفراء'}];
+function bagHTML(counts){const balls=[];counts.forEach(([c,n])=>{for(let i=0;i<n;i++)balls.push(c.k)});balls.sort(()=>Math.random()-.5);return `<div class="bag">${balls.map(k=>`<span class="ball ${k}"></span>`).join('')}</div>`}
+
 /* ---------- problem generators ---------- */
 const G={
   add0(){for(;;){const a=rnd(10,89),b=Math.random()<.5?rnd(1,9):rnd(10,89);if(a%10+b%10<10&&a+b<100)return{op:'+',nums:[a,b]}}},
@@ -292,11 +361,13 @@ const G={
   sub1(){for(;;){const a=rnd(20,99),b=Math.random()<.35?rnd(2,9):rnd(11,a-1);if(b%10>a%10&&b<a)return{op:'-',nums:[a,b]}}},
   // addition facts
   fOn(){const a=rnd(3,15),b=rnd(1,3);return{op:'+',nums:Math.random()<.3?[b,a]:[a,b],m:'counton'}},
-  fDbl(){const a=rnd(2,9);if(Math.random()<.6||a===9)return{op:'+',nums:[a,a],m:'doubles'};return{op:'+',nums:Math.random()<.5?[a,a+1]:[a+1,a],m:'doubles'}},
+  fDbl(){const a=rnd(1,9);return{op:'+',nums:[a,a],m:'doubles'}},
+  fNear(){const a=rnd(2,9),b=Math.random()<.5&&a<9?a+1:a-1;return{op:'+',nums:Math.random()<.5?[a,b]:[b,a],m:'doubles'}},
   fTen(){const a=rnd(7,9),b=rnd(11-a,9);return{op:'+',nums:Math.random()<.5?[a,b]:[b,a],m:'maketen'}},
   fThree(){for(;;){const n=[rnd(1,9),rnd(1,9),rnd(1,9)];if(n[0]+n[1]+n[2]>=8)return{op:'+',nums:n,m:'three1'}}},
   // subtraction facts
-  fBack(){const r=Math.random(),a=rnd(4,20);if(r<.12)return{op:'-',nums:[a,0],m:'countback'};if(r<.22)return{op:'-',nums:[a,a],m:'countback'};return{op:'-',nums:[a,rnd(1,3)],m:'countback'}},
+  fBack(){const a=rnd(4,20);return{op:'-',nums:[a,rnd(1,3)],m:'countback'}},
+  fZero(){const a=rnd(1,20);return{op:'-',nums:Math.random()<.5?[a,0]:[a,a],m:'countback'}},
   fThink(){for(;;){const a=rnd(11,18),b=rnd(2,9),d=a-b;if(d>=2&&d<=9)return{op:'-',nums:[a,b],m:'thinkadd'}}},
   // two-digit subtraction
   subT(){const a=rnd(2,9),b=rnd(1,a-1);return{op:'-',nums:[a*10,b*10],m:'tens'}},
@@ -329,41 +400,172 @@ const G={
     return{type:'choice',m:'cmp',a,b,key:'cmp'+a+'-'+b,title:'أختار الجملة الصحيحة',
       show:`<div class="big-word"><span dir="rtl">${ar(a)} ○ ${ar(b)}</span></div>`,
       choices:[0,1,2].map(i=>`${relHTML(a,b,i)}<small>${['أكبر من','أصغر من','يساوي'][i]}</small>`),correct:rel}},
-  pat(){const step=pick([1,10,-1,-10]);let st;
-    if(step===10)st=rnd(1,49);else if(step===-10)st=rnd(51,99);else if(step===1)st=rnd(1,94);else st=rnd(6,99);
+  pat(){const step=pick([2,3,4,5,10,-1,-2,-5,-10]);let st;
+    if(step>0)st=rnd(1,99-5*step);else st=rnd(-5*step,99);
     const terms=[0,1,2,3].map(i=>st+i*step),ans=st+4*step;
     return{type:'num',answer:ans,m:'pat',step,terms,key:'pat'+st+step,title:'أكمل النمط',show:seqHTML([...terms,'?'])}},
   skip(){const step=pick([2,5,10]);const k=rnd(1,Math.floor((99-4*step)/step));const st=k*step;
     const terms=[0,1,2,3].map(i=>st+i*step),ans=st+4*step;
     return{type:'num',answer:ans,m:'skip',step,terms,key:'skip'+st+step,title:'أكمل العدّ',show:seqHTML([...terms,'?'])}},
+  // chapter 1 extras
+  group10(){const n=rnd(12,49);const t=Math.floor(n/10),u=n%10;
+    return{type:'num',answer:n,m:'group10',key:'g10'+n,title:'أجمّع كل ١٠ آحاد في عشرة، ثم أكتب العدد',
+      show:`<div class="scatter" style="grid-template-columns:repeat(7,14px)">${'<div class="cube"></div>'.repeat(n)}</div><div class="blabel">${ar(n)} آحادًا = ؟ عشرات و ؟ آحاد</div>`}},
+  pvDigit(){let n;do{n=rnd(11,99)}while(n%10===0||Math.floor(n/10)===n%10);const t=Math.floor(n/10),u=n%10,which=Math.random()<.5?'t':'o';
+    const d=which==='t'?t:u,val=which==='t'?t*10:u,opts=[d,d*10].sort(()=>Math.random()-.5);
+    const html=which==='t'?`<span class="hl-digit">${ar(t)}</span>${ar(u)}`:`${ar(t)}<span class="hl-digit">${ar(u)}</span>`;
+    return{type:'choice',m:'pvDigit',n,which,key:'pvd'+n+which,title:'ما قيمة الرقم الملوّن بالأحمر؟',
+      show:`<div class="big-word"><bdi dir="ltr">${html}</bdi></div>`,choices:opts.map(v=>ar(v)),correct:opts.indexOf(val)}},
+  logic(){const k=pick([0,1,2]);
+    if(k===0){const t=rnd(1,9),u=rnd(1,8);const lo=u-1,hi=u+1;
+      return{type:'num',answer:t*10+u,m:'logic',kind:k,t,u,lo,hi,key:'lg0'+t+u,title:'أستعمل الاستدلال المنطقي',
+        show:storyShow(`فكّرتُ في عدد من رقمين. رقم العشرات فيه ${ar(t)}، ورقم الآحاد أكبر من ${ar(lo)} وأصغر من ${ar(hi)}. ما العدد؟`)}}
+    if(k===1){let t,u;do{t=rnd(2,9);u=rnd(0,t-1)}while(t-u<1);const d=t-u,sm=t+u;
+      return{type:'num',answer:t*10+u,m:'logic',kind:k,t,u,d,sm,key:'lg1'+t+u,title:'أستعمل الاستدلال المنطقي',
+        show:storyShow(`عدد من رقمين، رقم العشرات فيه أكبر من رقم الآحاد بمقدار ${ar(d)}، ومجموع الرقمين ${ar(sm)}. ما العدد؟`)}}
+    const ans=rnd(5,12),lo=ans-2,hi=ans+1;const P=person();
+    return{type:'num',answer:ans,m:'logic',kind:k,lo,hi,ex:ans-1,key:'lg2'+ans,title:'أستعمل الاستدلال المنطقي',
+      show:storyShow(`عمر ${P.n} أكبر من ${ar(lo)} سنوات وأصغر من ${ar(hi)} سنة، ولا يساوي ${ar(ans-1)}. كم عمر ${P.n}؟`)}},
+  // chapter 2 extras
+  props(){const k=Math.random();
+    if(k<.5){const a=rnd(1,9),b=rnd(1,9);return{type:'num',answer:a,m:'props',kind:'swap',a,b,key:'pr'+a+b,title:'أكتب العدد المفقود',
+      show:`<div class="big-word"><span dir="rtl">${ar(a)} + ${ar(b)} = ${ar(b)} + <span class="mbox">؟</span></span></div>`}}
+    const a=rnd(1,19),z=Math.random()<.5;return{type:'num',answer:a,m:'props',kind:'zero',a,key:'prz'+a+z,title:'أجد ناتج الجمع',
+      show:`<div class="big-word"><span dir="rtl">${z?`${ar(a)} + ٠`:`٠ + ${ar(a)}`} = <span class="mbox">؟</span></span></div>`}},
+  model(){const P=person(),x=pick(THINGS),a=rnd(2,9),b=rnd(1,9);
+    return storyP(`كان مع ${P.n} ${ar(a)} من ${x}، ثم ${P.v('أخذ','أخذت')} ${ar(b)} أخرى. كم أصبح مع${P.h} من ${x}؟`,a+b,{nums:[a,b],op:'+',need:`عدد ${x} مع ${P.n} الآن`})},
+  plan2(){const k=pick([0,1,2]),x=pick(THINGS);
+    if(k===0){const P=person(),a=rnd(2,8),b=rnd(2,8),c=rnd(1,6);return storyP(`جمع${P.m?'':'ت'} ${P.n} ${ar(a)} من ${x} يوم الأحد، و${ar(b)} يوم الاثنين، و${ar(c)} يوم الثلاثاء. كم جمع${P.m?'':'ت'} في الأيام الثلاثة؟`,a+b+c,{nums:[a,b,c],op:'+',need:'العدد الكلي في الأيام الثلاثة'})}
+    if(k===1){const[A,B]=twoPeople(),a=rnd(2,9),d=rnd(1,6);return storyP(`مع ${A.n} ${ar(a)} من ${x}، ومع ${B.n} عدد يزيد على ما مع ${A.n} بمقدار ${ar(d)}. كم مع ${B.n} من ${x}؟`,a+d,{nums:[a,d],op:'+',need:`عدد ${x} مع ${B.n}`})}
+    const P=person(),a=rnd(2,8),b=rnd(2,8),c=rnd(1,5);return storyP(`أعطى${P.m?'':'ت'} ${P.n} أخاه ${ar(a)} من ${x}، وأعطى${P.m?'':'ت'} أخته ${ar(b)}، وبقي مع${P.h} ${ar(c)}. كم كان مع${P.h} في البداية؟`,a+b+c,{nums:[a,b,c],op:'+',need:`العدد الذي كان مع ${P.n} في البداية`,back:true})},
+  // chapter 3 extras
+  dblSub(){const k=rnd(2,9);return{op:'-',nums:[2*k,k],m:'dblSub'}},
+  guess(){const s=rnd(8,18);let d;do{d=rnd(2,5)}while((s-d)%2!==0||s-d<2);const sm=(s-d)/2,bg=sm+d;const askBig=Math.random()<.5;
+    const k=Math.random()<.5;
+    const text=k?`في الحديقة ${ar(s)} من القطط، بعضها أسود وبعضها بني. عدد القطط السوداء يزيد على عدد البنية بمقدار ${ar(d)}. كم عدد القطط ${askBig?'السوداء':'البنية'}؟`
+      :`أعطى سالم ${ar(s)} من البالونات لأخيه وأخته. أعطى أخاه ${ar(d)} بالونات أكثر مما أعطى أخته. كم بالونًا أعطى ${askBig?'أخاه':'أخته'}؟`;
+    return{type:'num',answer:askBig?bg:sm,m:'guess',s,d,sm,bg,askBig,title:'أحل المسألة بالتخمين والتحقق',show:storyShow(text),key:'gs'+s+d+askBig+k}},
+  missing(){const a=rnd(1,9),x=rnd(1,9),s=a+x;return{type:'num',answer:x,m:'missing',a,s,key:'ms'+a+x,title:'أجد العدد المفقود',
+      show:`<div class="big-word"><span dir="rtl">${ar(a)} + <span class="mbox">؟</span> = ${ar(s)}</span></div>`}},
+  family(){let a,b;do{a=rnd(2,9);b=rnd(2,9)}while(a===b);const s=a+b;
+    const facts=[[a,'+',b,s],[b,'+',a,s],[s,'-',a,b],[s,'-',b,a]];const qi=rnd(1,3),slot=rnd(0,2)===1?1:2;
+    const q=facts[qi],ans=slot===1?q[2]:q[3];
+    const show=facts.map((f,i)=>{const op=f[1]==='+'?'+':MINUS;const B=i===qi&&slot===1?'<span class="mbox">؟</span>':ar(f[2]);const R=i===qi&&slot===2?'<span class="mbox">؟</span>':ar(f[3]);return `<div class="big-word" style="font-size:1.4rem"><span dir="rtl">${ar(f[0])} ${op} ${B} = ${R}</span></div>`}).join('');
+    return{type:'num',answer:ans,m:'family',a,b,s,key:'fm'+a+b+qi+slot,title:'أكمل الحقائق المترابطة',show}},
+  // chapter 4: data and chance
+  tally(){const d=makeData(14),i=rnd(0,d.cats.length-1);
+    return{type:'num',answer:d.vals[i],m:'tally',d,i,key:'tl'+d.vals.join(),title:d.set.topic,show:tallyTable(d)+`<p class="story">كم عدد ${d.set.L(d.cats[i])}؟</p>`}},
+  pict(){const d=makeData(10),i=rnd(0,d.cats.length-1);
+    return{type:'num',answer:d.vals[i],m:'pict',d,i,key:'pc'+d.vals.join(),title:d.set.topic,show:pictTable(d)+`<p class="story">كم عدد ${d.set.L(d.cats[i])}؟</p>`}},
+  pictRead(){return readQ(makeData(10),'pict')},
+  table(){const k=pick([2,3,5,10]),n=rnd(3,k===10?6:k===5?7:6),thing=pick([['الطبق','أطباق','البيض'],['الصندوق','صناديق','الأقلام'],['الكيس','أكياس','البرتقال'],['العلبة','علب','الكرات']]);
+    const rows=Array.from({length:n},(_,i)=>i+1);
+    const show=`<p class="story">في ${thing[0]} الواحد ${ar(k)} من ${thing[2]}. كم من ${thing[2]} في ${ar(n)} ${thing[1]}؟ أكمل الجدول.</p><table class="dt" dir="rtl"><tr><th>عدد ${thing[1]}</th>${rows.map(r=>`<td class="num">${ar(r)}</td>`).join('')}</tr><tr><th>عدد ${thing[2]}</th>${rows.map(r=>r<=2?`<td class="num">${ar(k*r)}</td>`:r===n?'<td class="q">؟</td>':'<td></td>').join('')}</tr></table>`;
+    return{type:'num',answer:k*n,m:'table',k,n,key:'tb'+k+n,title:'أنشئ جدولًا',show}},
+  bar(){const d=makeData(12),i=rnd(0,d.cats.length-1);
+    return{type:'num',answer:d.vals[i],m:'bar',d,i,key:'br'+d.vals.join(),title:d.set.topic,show:barSVG(d)+`<p class="story">كم عدد ${d.set.L(d.cats[i])}؟</p>`}},
+  barRead(){return readQ(makeData(12),'bar')},
+  certain(){const C=pick(COLORS);let D;do{D=pick(COLORS)}while(D===C);const r=Math.random();
+    let counts,ev,ans;
+    if(r<.34){counts=[[C,rnd(5,9)]];ev=C;ans=0}else if(r<.67){counts=[[C,rnd(5,9)]];ev=D;ans=2}else{counts=[[C,rnd(2,5)],[D,rnd(2,5)]];ev=pick([C,D]);ans=1}
+    return{type:'choice',m:'certain',counts,ev,key:'ce'+counts.map(c=>c[0].k+c[1]).join()+ev.k,title:`أسحب كرة واحدة من الكيس دون أن أنظر. ما وصف حدث «سحب كرة ${ev.f}»؟`,
+      show:bagHTML(counts),choices:['أكيد','ممكن','مستحيل'],correct:ans}},
+  likely(){const cs=COLORS.slice().sort(()=>Math.random()-.5).slice(0,pick([2,3]));const ns=[];while(ns.length<cs.length){const v=rnd(1,8);if(!ns.includes(v))ns.push(v)}
+    const counts=cs.map((c,i)=>[c,ns[i]]),most=Math.random()<.5;const target=most?Math.max(...ns):Math.min(...ns);
+    return{type:'choice',m:'likely',counts,most,key:'lk'+counts.map(c=>c[0].k+c[1]).join()+most,title:`أسحب كرة واحدة من الكيس. أي لون ${most?'أكثر':'أقل'} إمكانية للظهور؟`,
+      show:bagHTML(counts),choices:cs.map(c=>`<span class="ball ${c.k}" style="width:20px;height:20px"></span> ${c.n}`),correct:ns.indexOf(target)}},
+  // chapter 5 extras
+  addT(){let a,b;do{a=rnd(1,8);b=rnd(1,8)}while(a+b>9);return{op:'+',nums:[a*10,b*10],m:'tensAdd'}},
+  on2(){for(;;){const a=rnd(20,90),b=pick([1,2,3,10,20,30]);if(a+b<=99)return{op:'+',nums:[a,b],m:'on2'}}},
+  workBack(){const P=person(),x=pick(['الريالات','الملصقات','الكرات','القصص']);const k=Math.random()<.5;
+    if(k){const a=rnd(10,60),b=rnd(5,30),c=a+b;return storyP(`كان مع ${P.n} بعض ${x}. ${P.v('أعطاه','أعطاها')} والد${P.h} ${ar(b)} أخرى، فأصبح مع${P.h} ${ar(c)}. كم كان مع${P.h} في البداية؟`,a,{nums:[c,b],op:'-',need:'العدد في البداية',back:'add'})}
+    const a=rnd(20,80),b=rnd(5,a-5),c=a-b;return storyP(`كان مع ${P.n} بعض ${x}. ${P.v('أعطى','أعطت')} صديق${P.m?'ه':'تها'} ${ar(b)} منها، فبقي مع${P.h} ${ar(c)}. كم كان مع${P.h} في البداية؟`,a,{nums:[c,b],op:'+',need:'العدد في البداية',back:'sub'})},
+  add5(){for(;;){const a=rnd(11,89),b=rnd(2,9),rg=Math.random()<.6;if((a%10+b>=10)===rg&&a+b<100)return{op:'+',nums:[a,b]}}},
+  estAdd(){for(;;){const a=rnd(11,79),b=rnd(11,79);if(a%10&&b%10&&round10(a)+round10(b)<=90)return{type:'num',answer:round10(a)+round10(b),m:'est2',op:'+',a,b,key:'ea'+a+b,title:'أقدّر ناتج الجمع',
+      show:`<div class="big-word"><span dir="rtl">${ar(a)} + ${ar(b)}</span></div><div class="blabel">أقرّب كل عدد إلى أقرب عشرة، ثم أجمع</div>`}}},
+  plan5(){const k=pick([0,1,2]),x=pick(THINGS);
+    if(k===0){const P=person();let a,b;do{a=rnd(12,60);b=rnd(11,39)}while(a+b>99);return storyP(`في مكتبة ${P.n} ${ar(a)} قصة، ثم ${P.v('اشترى','اشترت')} ${ar(b)} قصة أخرى. كم قصة أصبحت في مكتبت${P.h}؟`,a+b,{nums:[a,b],op:'+',need:'عدد القصص الآن'})}
+    if(k===1){let a,b,c;do{a=rnd(10,35);b=rnd(10,35);c=rnd(10,30)}while(a+b+c>99);return storyP(`زرع المزارع ${ar(a)} شجرة في الصف الأول، و${ar(b)} شجرة في الصف الثاني، و${ar(c)} شجرة في الصف الثالث. كم شجرة زرع؟`,a+b+c,{nums:[a,b,c],op:'+',need:'عدد الأشجار كلها'})}
+    const[A,B]=twoPeople();let a,d;do{a=rnd(15,60);d=rnd(5,30)}while(a+d>99);return storyP(`مع ${A.n} ${ar(a)} من ${x}، ومع ${B.n} عدد يزيد على ما مع ${A.n} بمقدار ${ar(d)}. كم مع ${B.n} من ${x}؟`,a+d,{nums:[a,d],op:'+',need:`عدد ${x} مع ${B.n}`})},
+  // chapter 6 extras
+  back2(){for(;;){const a=rnd(20,99),b=pick([1,2,3,10,20,30]);if(a-b>=0)return{op:'-',nums:[a,b],m:'back2'}}},
+  sentence(){const k=pick([0,1]),x=pick(THINGS);
+    if(k===0){const P=person(),a=rnd(25,99),b=rnd(11,a-5);return storyP(`كان مع ${P.n} ${ar(a)} من ${x}، ${P.v('فأعطى','فأعطت')} أصدقاء${P.h} ${ar(b)} منها. كم بقي مع${P.h}؟`,a-b,{nums:[a,b],op:'-',need:'العدد الباقي'})}
+    const[A,B]=twoPeople(),a=rnd(30,99),b=rnd(11,a-5);return storyP(`مع ${A.n} ${ar(a)} من ${x}، ومع ${B.n} ${ar(b)} منها. كم يزيد ما مع ${A.n} على ما مع ${B.n}؟`,a-b,{nums:[a,b],op:'-',need:'الفرق بين العددين'})},
+  estSub(){for(;;){const a=rnd(31,99),b=rnd(11,a-10);if(a%10&&b%10&&round10(a)-round10(b)>=10&&round10(a)<=90)return{type:'num',answer:round10(a)-round10(b),m:'est2',op:'-',a,b,key:'es'+a+b,title:'أقدّر ناتج الطرح',
+      show:`<div class="big-word"><span dir="rtl">${ar(a)} ${MINUS} ${ar(b)}</span></div><div class="blabel">أقرّب كل عدد إلى أقرب عشرة، ثم أطرح</div>`}}},
   chk(){const q=Math.random()<.65?G.sub1():G.sub0();const[a,b]=q.nums;return{op:'+',nums:[a-b,b],m:'check',orig:[a,b]}},
 };
-const GROUPS=['العدد والقيمة المنزلية','حقائق الجمع','حقائق الطرح','الجمع بأعداد من رقمين','الطرح بأعداد من رقمين','تحدّي'];
+function readQ(d,kind){
+  const n=d.cats.length,i=rnd(0,n-1);let j;do{j=rnd(0,n-1)}while(j===i);
+  const show=(kind==='bar'?barSVG(d):pictTable(d));const L=d.set.L,r=Math.random();
+  if(r<.34){const most=Math.random()<.5,t=most?Math.max(...d.vals):Math.min(...d.vals);
+    return{type:'choice',m:'readMost',d,most,key:'rm'+d.vals.join()+most,title:d.set.topic,show:show+`<p class="story">أي اختيار هو ${most?'الأكثر':'الأقل'}؟</p>`,choices:d.cats.slice(),correct:d.vals.indexOf(t),kind}}
+  if(r<.7){const a=d.vals[i]>d.vals[j]?i:j,b=a===i?j:i;
+    return{type:'num',answer:d.vals[a]-d.vals[b],m:'readDiff',d,a,b,kind,key:'rd'+d.vals.join()+a+b,title:d.set.topic,show:show+`<p class="story">كم يزيد عدد ${L(d.cats[a])} على عدد ${L(d.cats[b])}؟</p>`}}
+  return{type:'num',answer:d.vals[i]+d.vals[j],m:'readSum',d,a:i,b:j,kind,key:'rs'+d.vals.join()+i+j,title:d.set.topic,show:show+`<p class="story">كم مجموع ${L(d.cats[i])} و${L(d.cats[j])}؟</p>`}
+}
+const GROUPS=['الفصل ١: القيمة المنزلية حتى ١٠٠ والأنماط','الفصل ٢: طرائق الجمع','الفصل ٣: طرائق الطرح','الفصل ٤: تمثيل البيانات وقراءتها','الفصل ٥: جمع الأعداد المكونة من رقمين','الفصل ٦: طرح الأعداد المكونة من رقمين','تحدّي'];
 const LEVELS=[
-  {id:'pv',g:0,kind:'num',name:'القيمة المنزلية للأعداد حتى ١٠٠',sub:'أعدّ العشرات والآحاد وأكتب العدد',ex:'٤ عشرات و ٧ آحاد',helpers:false,hint:'أعدّ الأعمدة (العشرات) أولًا، ثم المكعبات (الآحاد).'},
-  {id:'rw',g:0,kind:'num',name:'قراءة الأعداد وكتابتها',sub:'من اسم العدد أو الصيغة الممتدة إلى الأرقام',ex:'سبعة وأربعون',helpers:false,hint:'في اسم العدد نقرأ الآحاد أولًا ثم العشرات.'},
-  {id:'est',g:0,kind:'num',name:'تقدير الكميات',sub:'أقدّر عدد الأشياء بأقرب عشرة',ex:'حوالي ٤٠',helpers:false,hint:'لا تعدّ كل المكعبات. تخيّل مجموعات من ١٠ وقدّر.'},
-  {id:'ord',g:0,kind:'num',name:'ترتيب الأعداد',sub:'العدد الذي يأتي قبل، أو بعد، أو بين',ex:'بعد ٥٩',helpers:false,hint:'العدد الذي بعده يزيد ١، والعدد الذي قبله ينقص ١.'},
-  {id:'cmp',g:0,kind:'num',name:'أقارن بين عددين',sub:'أستعمل الإشارات: أكبر من، أصغر من، يساوي',ex:'٣٥ > ٢٨',helpers:false,hint:'قارن العشرات أولًا. إذا تساوت، قارن الآحاد.'},
-  {id:'pat',g:0,kind:'num',name:'الأنماط على لوحة المئة',sub:'أكتشف القاعدة: يزيد أو ينقص ١ أو ١٠',ex:'٢٣، ٣٣، ٤٣',helpers:false,hint:'انظر كم يزيد أو ينقص كل عدد عن الذي قبله.'},
-  {id:'skip',g:0,kind:'num',name:'أعدّ تصاعديًا',sub:'أعدّ اثنين اثنين، وخمسة خمسة، وعشرة عشرة',ex:'٥، ١٠، ١٥',helpers:false,hint:'ما العدد الذي نضيفه كل مرة؟'},
-  {id:'fOn',g:1,kind:'add',name:'أجمع بالعدّ التصاعدي',sub:'أبدأ بالعدد الأكبر وأعدّ إلى الأمام على خط الأعداد',ex:'٧ + ٣',helpers:false,hint:'ابدأ بالعدد الأكبر، ثم عُدّ إلى الأمام.'},
-  {id:'fDbl',g:1,kind:'add',name:'أجمع العدد ونفسه',sub:'الحقائق المتماثلة، والعدد ونفسه + ١',ex:'٦ + ٦',helpers:false,hint:'هل العددان متساويان أو متقاربان؟ استعمل حقيقة العدد ونفسه.'},
-  {id:'fTen',g:1,kind:'add',name:'أكوّن عشرة لأجد ناتج الجمع',sub:'أكمل العدد إلى ١٠ ثم أضيف الباقي',ex:'٩ + ٥',helpers:false,hint:'كم يحتاج العدد الأكبر ليصبح ١٠؟ خذه من العدد الآخر.'},
-  {id:'fThree',g:1,kind:'add',name:'أجمع ثلاثة أعداد',sub:'أبحث عن عددين مجموعهما ١٠ أو عددين متساويين',ex:'٧ + ٣ + ٥',helpers:false,hint:'ابحث عن عددين مجموعهما ١٠، أو عددين متساويين، واجمعهما أولًا.'},
-  {id:'fBack',g:2,kind:'sub',name:'أطرح بالعدّ التنازلي',sub:'أعدّ إلى الخلف، وأطرح الصفر والعدد من نفسه',ex:'٩ − ٢',helpers:false,hint:'ابدأ بالعدد الأول، ثم عُدّ إلى الخلف.'},
-  {id:'fThink',g:2,kind:'sub',name:'أطرح مستعملًا حقائق الجمع',sub:'الحقائق المترابطة: ٦ + ٧ = ١٣ إذن ١٣ − ٦ = ٧',ex:'١٣ − ٦',helpers:false,hint:'فكّر: أي عدد أجمعه مع العدد المطروح ليكون الناتج العدد الأول؟'},
-  {id:'add0',g:3,kind:'add',name:'الجمع بدون إعادة تجميع',sub:'عدد من رقمين + عدد من رقم أو رقمين',tag:'٥-٤',ex:'١٥ + ٢٤',helpers:false},
-  {id:'add1',g:3,kind:'add',name:'جمع رقم واحد مع إعادة التجميع',sub:'عدد من رقمين + عدد من رقم واحد',tag:'٥-٦',ex:'١٧ + ٥',helpers:true},
-  {id:'add2',g:3,kind:'add',name:'جمع عددين من رقمين مع إعادة التجميع',sub:'نجمع الآحاد، ونعيد التجميع عند الضرورة',tag:'٥-٧',ex:'١٨ + ٢٥',helpers:true},
-  {id:'add3',g:3,kind:'add',name:'جمع ثلاثة أعداد',sub:'نبحث عن عددين مجموعهما ١٠',tag:'٥-٩',ex:'٣٦ + ١٤ + ٢٤',helpers:true},
-  {id:'subT',g:4,kind:'sub',name:'أطرح العشرات',sub:'أستعمل حقائق الطرح: ٦ − ٤ = ٢ إذن ٦٠ − ٤٠ = ٢٠',ex:'٦٠ − ٤٠',helpers:false,hint:'اطرح العشرات كما تطرح الآحاد، ثم اكتب صفرًا في خانة الآحاد.'},
-  {id:'sub0',g:4,kind:'sub',name:'الطرح بدون إعادة تجميع',sub:'نطرح الآحاد ثم العشرات',ex:'٤٨ − ٢٣',helpers:false},
-  {id:'sub1',g:4,kind:'sub',name:'الطرح مع إعادة التجميع',sub:'نأخذ عشرة عندما لا تكفي الآحاد',ex:'٤٣ − ١٧',helpers:true},
-  {id:'sub2',g:4,kind:'sub',name:'أطرح عددًا من رقم واحد من عدد من رقمين',sub:'مع إعادة التجميع',ex:'٤٣ − ٧',helpers:true},
-  {id:'sub3',g:4,kind:'sub',name:'أطرح عددين كلٌّ منهما من رقمين',sub:'مع إعادة التجميع',ex:'٦٢ − ٢٨',helpers:true},
-  {id:'chk',g:4,kind:'add',name:'أستعمل الجمع للتحقق من ناتج الطرح',sub:'أجمع الناتج مع العدد المطروح',ex:'٢٦ + ١٧',helpers:true},
-  {id:'mix',g:5,kind:'mix',name:'تحدّي: جمع وطرح',sub:'مسائل منوّعة من كل الدروس',ex:'؟',helpers:true},
+  {id:'group10',g:0,kind:'num',tag:'١-١',name:'الآحاد والعشرات',sub:'أجمّع كل ١٠ آحاد لأكوّن عشرة',ex:'٢٤ آحادًا',helpers:false,hint:'كوّن مجموعات من ١٠ مكعبات. كل مجموعة = عشرة.'},
+  {id:'pv',g:0,kind:'num',tag:'١-٢',name:'القيمة المنزلية للأعداد حتى ١٠٠',sub:'أعدّ العشرات والآحاد، وأعرف قيمة كل رقم',ex:'٤ عشرات و ٧ آحاد',helpers:false,hint:'أعدّ الأعمدة (العشرات) أولًا، ثم المكعبات (الآحاد).'},
+  {id:'pvDigit',g:0,kind:'num',tag:'١-٢',name:'قيمة الرقم في العدد',sub:'موقع الرقم يحدّد قيمته',ex:'٤ أو ٤٠',helpers:false,hint:'هل الرقم في منزلة العشرات أم الآحاد؟'},
+  {id:'logic',g:0,kind:'num',tag:'١-٣',name:'أحل المسألة: الاستدلال المنطقي',sub:'أستبعد الأعداد التي لا تناسب الشروط',ex:'ما العدد؟',helpers:false,hint:'اكتب الاحتمالات، ثم استبعد ما لا يناسب كل شرط.'},
+  {id:'rw',g:0,kind:'num',tag:'١-٤',name:'قراءة الأعداد وكتابتها',sub:'من اسم العدد أو الصيغة الممتدة إلى الأرقام',ex:'سبعة وأربعون',helpers:false,hint:'في اسم العدد نقرأ الآحاد أولًا ثم العشرات.'},
+  {id:'est',g:0,kind:'num',tag:'١-٥',name:'تقدير الكميات',sub:'أقدّر عدد الأشياء بأقرب عشرة',ex:'حوالي ٤٠',helpers:false,hint:'لا تعدّ كل المكعبات. تخيّل مجموعات من ١٠ وقدّر.'},
+  {id:'ord',g:0,kind:'num',tag:'١-٦',name:'ترتيب الأعداد',sub:'العدد الذي يأتي قبل، أو بعد، أو بين',ex:'بعد ٥٩',helpers:false,hint:'العدد الذي بعده يزيد ١، والعدد الذي قبله ينقص ١.'},
+  {id:'cmp',g:0,kind:'num',tag:'١-٧',name:'مقارنة الأعداد',sub:'أستعمل الإشارات: أكبر من، أصغر من، يساوي',ex:'٣٥ > ٢٨',helpers:false,hint:'قارن العشرات أولًا. إذا تساوت، قارن الآحاد.'},
+  {id:'pat',g:0,kind:'num',tag:'١-٨',name:'الأنماط',sub:'أكتشف القاعدة: كم يزيد أو ينقص كل عدد',ex:'٣، ٥، ٧',helpers:false,hint:'انظر كم يزيد أو ينقص كل عدد عن الذي قبله.'},
+  {id:'skip',g:0,kind:'num',tag:'١-٩',name:'الأنماط على لوحة المئة',sub:'العدّ القفزي: اثنينات، خمسات، عشرات',ex:'٥، ١٠، ١٥',helpers:false,hint:'ما العدد الذي نضيفه كل مرة؟'},
+
+  {id:'props',g:1,kind:'add',tag:'٢-١',name:'خصائص الجمع',sub:'ترتيب الأعداد لا يغيّر الناتج، والعدد + ٠ = العدد',ex:'٣ + ٥ = ٥ + ٣',helpers:false,hint:'تذكّر: خاصية الإبدال، وجمع الصفر.'},
+  {id:'fOn',g:1,kind:'add',tag:'٢-٢',name:'الجمع بالعدّ التصاعدي',sub:'أبدأ بالعدد الأكبر وأعدّ إلى الأمام على خط الأعداد',ex:'٧ + ٣',helpers:false,hint:'ابدأ بالعدد الأكبر، ثم عُدّ إلى الأمام.'},
+  {id:'model',g:1,kind:'add',tag:'٢-٣',name:'أحل المسألة: أمثّلها',sub:'أمثّل المسألة بالنماذج لأحلّها',ex:'مسألة',helpers:false,hint:'مثّل كل عدد بمكعبات، ثم اجمعها.'},
+  {id:'fDbl',g:1,kind:'add',tag:'٢-٤',name:'جمع العدد ونفسه',sub:'الحقائق المتماثلة',ex:'٦ + ٦',helpers:false,hint:'العددان متساويان: استعمل حقيقة العدد ونفسه.'},
+  {id:'fNear',g:1,kind:'add',tag:'٢-٥',name:'جمع العدد ونفسه مضافًا إليه ١ أو مطروحًا منه ١',sub:'٦ + ٧ = ٦ + ٦ + ١',ex:'٦ + ٧',helpers:false,hint:'العددان متقاربان: استعمل حقيقة العدد ونفسه ثم أضف ١.'},
+  {id:'fTen',g:1,kind:'add',tag:'٢-٦',name:'الجمع بتكوين العشرة',sub:'أكمل العدد إلى ١٠ ثم أضيف الباقي',ex:'٩ + ٥',helpers:false,hint:'كم يحتاج العدد الأكبر ليصبح ١٠؟ خذه من العدد الآخر.'},
+  {id:'fThree',g:1,kind:'add',tag:'٢-٧',name:'جمع ثلاثة أعداد',sub:'أبحث عن عددين مجموعهما ١٠ أو عددين متساويين',ex:'٧ + ٣ + ٥',helpers:false,hint:'ابحث عن عددين مجموعهما ١٠، أو عددين متساويين، واجمعهما أولًا.'},
+  {id:'plan2',g:1,kind:'add',tag:'٢-٨',name:'أختار خطة مناسبة',sub:'أكتب جملة عددية أو أرسم صورة لأحل المسألة',ex:'مسألة',helpers:false,hint:'ما المعطيات؟ ما المطلوب؟ اكتب جملة عددية.'},
+
+  {id:'fBack',g:2,kind:'sub',tag:'٣-١',name:'الطرح بالعدّ التنازلي',sub:'أبدأ بالعدد الأول وأعدّ إلى الخلف',ex:'٩ − ٢',helpers:false,hint:'ابدأ بالعدد الأول، ثم عُدّ إلى الخلف.'},
+  {id:'fZero',g:2,kind:'sub',tag:'٣-٢',name:'طرح الصفر وطرح الكل',sub:'العدد − ٠ = العدد، والعدد − نفسه = ٠',ex:'٨ − ٨',helpers:false,hint:'إذا طرحت صفرًا يبقى العدد، وإذا طرحت الكل يبقى صفر.'},
+  {id:'dblSub',g:2,kind:'sub',tag:'٣-٣',name:'الطرح باستعمال حقائق جمع العدد ونفسه',sub:'٨ + ٨ = ١٦ إذن ١٦ − ٨ = ٨',ex:'١٦ − ٨',helpers:false,hint:'أي حقيقة متماثلة ناتجها العدد الأول؟'},
+  {id:'guess',g:2,kind:'sub',tag:'٣-٤',name:'أحل المسألة: التخمين والتحقق',sub:'أخمّن، ثم أتحقق، ثم أعدّل تخميني',ex:'مسألة',helpers:false,hint:'خمّن عددًا، ثم تحقّق من الشرطين، ثم عدّل.'},
+  {id:'fThink',g:2,kind:'sub',tag:'٣-٥',name:'العلاقة بين الجمع والطرح',sub:'أطرح مستعملًا حقائق الجمع',ex:'١٣ − ٦',helpers:false,hint:'فكّر: أي عدد أجمعه مع العدد المطروح ليكون الناتج العدد الأول؟'},
+  {id:'missing',g:2,kind:'sub',tag:'٣-٦',name:'الأعداد المفقودة',sub:'أجد العدد المفقود في جملة الجمع بحقيقة طرح',ex:'٩ + ؟ = ١٥',helpers:false,hint:'اطرح العدد المعلوم من الناتج.'},
+  {id:'family',g:2,kind:'sub',tag:'٣-٧',name:'الحقائق المترابطة',sub:'أربع حقائق تشترك في الأعداد الثلاثة نفسها',ex:'٦، ٧، ١٣',helpers:false,hint:'الحقائق المترابطة تستعمل الأعداد الثلاثة نفسها.'},
+
+  {id:'tally',g:3,kind:'num',tag:'٤-١',name:'جدول الإشارات',sub:'أعدّ إشارات العدّ خمسات',ex:'||||',helpers:false,hint:'كل حزمة مشطوبة = ٥. أعدّ خمسات ثم الباقي.'},
+  {id:'pict',g:3,kind:'num',tag:'٤-٢',name:'التمثيل بالصور',sub:'كل صورة تمثّل شيئًا واحدًا',ex:'● ● ●',helpers:false,hint:'أعدّ الصور في الصف المطلوب.'},
+  {id:'pictRead',g:3,kind:'num',tag:'٤-٣',name:'قراءة البيانات الممثلة بالصور',sub:'الأكثر والأقل، وكم يزيد، والمجموع',ex:'الأكثر؟',helpers:false,hint:'قارن عدد الصور في الصفوف.'},
+  {id:'table',g:3,kind:'num',tag:'٤-٤',name:'أحل المسألة: أنشئ جدولًا',sub:'أكمل الجدول بنمط ثابت',ex:'٢، ٤، ٦',helpers:false,hint:'كم يزيد العدد في كل خانة؟ أكمل الجدول خانة خانة.'},
+  {id:'bar',g:3,kind:'num',tag:'٤-٥',name:'التمثيل بالأعمدة',sub:'أقرأ طول العمود على المحور',ex:'▇ ▅ ▃',helpers:false,hint:'انظر إلى أعلى العمود، ثم إلى العدد المقابل له على المحور.'},
+  {id:'barRead',g:3,kind:'num',tag:'٤-٦',name:'قراءة البيانات الممثلة بالأعمدة',sub:'الأكثر والأقل، وكم يزيد، والمجموع',ex:'الأطول؟',helpers:false,hint:'العمود الأطول هو الأكثر، والأقصر هو الأقل.'},
+  {id:'certain',g:3,kind:'num',tag:'٤-٧',name:'الحدث الأكيد والحدث المستحيل',sub:'أكيد، ممكن، مستحيل',ex:'أكيد؟',helpers:false,hint:'هل توجد في الكيس كرات بهذا اللون؟ وهل كل الكرات بهذا اللون؟'},
+  {id:'likely',g:3,kind:'num',tag:'٤-٨',name:'أكثر إمكانية - أقل إمكانية',sub:'اللون الأكثر عددًا أكثر إمكانية للظهور',ex:'أكثر؟',helpers:false,hint:'أعدّ الكرات من كل لون وقارن.'},
+
+  {id:'addT',g:4,kind:'add',tag:'٥-١',name:'جمع العشرات',sub:'٣ + ٤ = ٧ إذن ٣٠ + ٤٠ = ٧٠',ex:'٣٠ + ٤٠',helpers:false,hint:'اجمع العشرات كما تجمع الآحاد، ثم اكتب صفرًا في خانة الآحاد.'},
+  {id:'on2',g:4,kind:'add',tag:'٥-٢',name:'الجمع بالعدّ التصاعدي',sub:'أعدّ آحادًا أو عشرات إلى الأمام',ex:'٣٤ + ٢٠',helpers:false,hint:'إذا كنت تضيف عشرات، عُدّ عشرة عشرة.'},
+  {id:'workBack',g:4,kind:'add',tag:'٥-٣',name:'أحل المسألة: أحل عكسيًّا',sub:'أبدأ من النهاية وأعكس العملية',ex:'مسألة',helpers:false,hint:'ابدأ بالعدد الأخير، واعكس ما حدث.'},
+  {id:'add0',g:4,kind:'add',tag:'٥-٤',name:'جمع عدد من رقمين إلى عدد من رقم واحد أو رقمين',sub:'بدون إعادة تجميع',ex:'١٥ + ٢٤',helpers:false},
+  {id:'add5',g:4,kind:'add',tag:'٥-٥',name:'الجمع بإعادة التجميع',sub:'أعيد التجميع عندما يكون مجموع الآحاد ١٠ أو أكثر',ex:'٢٧ + ٥',helpers:true,hint:'هل مجموع الآحاد ١٠ أو أكثر؟ إذا كان كذلك فأعد التجميع.'},
+  {id:'add1',g:4,kind:'add',tag:'٥-٦',name:'جمع عدد من رقمين إلى عدد من رقم واحد بإعادة التجميع',sub:'عدد من رقمين + عدد من رقم واحد',ex:'١٧ + ٥',helpers:true},
+  {id:'add2',g:4,kind:'add',tag:'٥-٧',name:'جمع عددين مكونين من رقمين بإعادة التجميع',sub:'نجمع الآحاد، ونعيد التجميع عند الضرورة',ex:'١٨ + ٢٥',helpers:true},
+  {id:'estAdd',g:4,kind:'add',tag:'٥-٨',name:'تقدير ناتج الجمع',sub:'أقرّب كل عدد إلى أقرب عشرة ثم أجمع',ex:'٣٨ + ٤١',helpers:false,hint:'آحاد ١ إلى ٤: أقرّب إلى أدنى. آحاد ٥ إلى ٩: أقرّب إلى أعلى.'},
+  {id:'add3',g:4,kind:'add',tag:'٥-٩',name:'جمع ثلاثة أعداد كل منها مكون من رقمين',sub:'نبحث عن عددين مجموعهما ١٠',ex:'٣٦ + ١٤ + ٢٤',helpers:true},
+  {id:'plan5',g:4,kind:'add',tag:'٥-١٠',name:'أختار خطة مناسبة',sub:'مسائل جمع بأعداد من رقمين',ex:'مسألة',helpers:false,hint:'ما المعطيات؟ ما المطلوب؟ اكتب جملة عددية ثم احسب.'},
+
+  {id:'subT',g:5,kind:'sub',tag:'٦-١',name:'طرح العشرات',sub:'٦ − ٤ = ٢ إذن ٦٠ − ٤٠ = ٢٠',ex:'٦٠ − ٤٠',helpers:false,hint:'اطرح العشرات كما تطرح الآحاد، ثم اكتب صفرًا في خانة الآحاد.'},
+  {id:'back2',g:5,kind:'sub',tag:'٦-٢',name:'الطرح بالعدّ التنازلي',sub:'أعدّ آحادًا أو عشرات إلى الخلف',ex:'٥٨ − ٢٠',helpers:false,hint:'إذا كنت تطرح عشرات، عُدّ عشرة عشرة إلى الخلف.'},
+  {id:'sub0',g:5,kind:'sub',tag:'٦-٣',name:'الطرح بدون إعادة التجميع',sub:'نطرح الآحاد ثم العشرات',ex:'٤٨ − ٢٣',helpers:false},
+  {id:'sub1',g:5,kind:'sub',tag:'٦-٤',name:'الطرح بإعادة التجميع',sub:'نأخذ عشرة عندما لا تكفي الآحاد',ex:'٤٣ − ١٧',helpers:true},
+  {id:'sentence',g:5,kind:'sub',tag:'٦-٥',name:'أحل المسألة: أكتب جملة عددية',sub:'مسائل طرح من الحياة',ex:'مسألة',helpers:false,hint:'اكتب جملة طرح، ثم احسب.'},
+  {id:'sub2',g:5,kind:'sub',tag:'٦-٦',name:'طرح عدد مكون من رقم واحد من عدد مكون من رقمين',sub:'مع إعادة التجميع',ex:'٤٣ − ٧',helpers:true},
+  {id:'sub3',g:5,kind:'sub',tag:'٦-٧',name:'طرح عددين كل منهما مكون من رقمين',sub:'مع إعادة التجميع',ex:'٦٢ − ٢٨',helpers:true},
+  {id:'chk',g:5,kind:'add',tag:'٦-٨',name:'التحقق من صحة ناتج الطرح',sub:'أجمع الناتج مع العدد المطروح',ex:'٢٦ + ١٧',helpers:true},
+  {id:'estSub',g:5,kind:'sub',tag:'٦-٩',name:'تقدير ناتج الطرح',sub:'أقرّب كل عدد إلى أقرب عشرة ثم أطرح',ex:'٦٤ − ١٨',helpers:false,hint:'آحاد ١ إلى ٤: أقرّب إلى أدنى. آحاد ٥ إلى ٩: أقرّب إلى أعلى.'},
+
+  {id:'mix',g:6,kind:'mix',name:'تحدّي: كل الدروس',sub:'مسائل منوّعة من كل الفصول',ex:'؟',helpers:true},
 ];
 function gen(lv){
   const src=lv.id==='mix'?pick(LEVELS.filter(l=>l.id!=='mix')):lv;
@@ -399,15 +601,16 @@ function show(id){['home','play','result'].forEach(s=>$(s).hidden=s!==id);window
 /* ---------- home ---------- */
 function renderHome(){
   $('totalPts').textContent=ar(store.total);
-  $('levels').innerHTML=GROUPS.map((gn,gi)=>`<h2 class="grp-h">${gn}</h2>`+LEVELS.filter(l=>l.g===gi).map(l=>{
+  let openG=0;try{const v=localStorage.getItem('abtal-open');if(v!=null)openG=+v}catch(e){}
+  $('levels').innerHTML=GROUPS.map((gn,gi)=>{const ls=LEVELS.filter(l=>l.g===gi);return `<details class="chap" data-g="${gi}" ${gi===openG?'open':''}><summary><h2>${gn}</h2><small>${ar(ls.length)} ${ls.length>2&&ls.length<11?'دروس':'درس'}</small></summary><div class="levels">`+ls.map(l=>{
     const b=store.best[l.id];
     return `<button class="lvl ${l.kind}" type="button" data-id="${l.id}">
       <h3>${l.name}${l.tag?`<span class="tag">درس <bdi dir="ltr">${l.tag}</bdi></span>`:''}</h3>
       <span class="ex">${l.ex}</span>
       <small>${l.sub}${b!=null?` · <span class="best">أفضل نتيجة: ${ar(b)} من ${ar(ROUND)}</span>`:''}</small>
-    </button>`}).join('')).join('');
+    </button>`}).join('')+'</div></details>'}).join('');
 }
-$('levels').addEventListener('click',e=>{const b=e.target.closest('.lvl');if(b)start(LEVELS.find(l=>l.id===b.dataset.id))});
+$('levels').addEventListener('click',e=>{const b=e.target.closest('.lvl');if(b){const lv=LEVELS.find(l=>l.id===b.dataset.id);try{localStorage.setItem('abtal-open',lv.g)}catch(_){}start(lv)}});
 
 /* ---------- round ---------- */
 function start(lv){
@@ -593,7 +796,67 @@ const finalTbl=ans=>({vals:{o:ans%10,t:Math.floor(ans/10)||''},hl:null});
 const pairCubes=(x,y,op='+')=>`<div class="blocks"><div class="grp">${cubes(x)}</div><span class="op">${op}</span><div class="grp">${cubes(y)}</div></div>`;
 const tensWord=t=>t===1?'عشرة':t===2?'عشرتان':'عشرات';
 const numTbl=(n,hl=null)=>({vals:{t:Math.floor(n/10),o:n%10},hl});
+const counters=(nums,op)=>op==='+'&&nums.every(n=>n<=12)?`<div class="blocks">${nums.map(n=>`<div class="grp">${cubes(n)}</div>`).join('<span class="op">+</span>')}</div>`:'';
 const SPECIAL={
+  story(p){const x=p.sx,ans=p.answer,op=x.op==='+'?'+':MINUS;const eqs=`${x.nums.map(ar).join(` ${op} `)} = ${ar(ans)}`;const out=[];
+    let txt=`المطلوب: ${x.need}.`;
+    if(x.back==='add')txt+=' زاد العدد ثم أصبح كما في النهاية، فأعكس العملية: أطرح ما أُضيف.';
+    else if(x.back==='sub')txt+=' نقص العدد ثم بقي ما في النهاية، فأعكس العملية: أجمع ما أُعطي.';
+    else if(x.back)txt+=' أجمع كل ما أُعطي مع ما بقي.';
+    else txt+=x.op==='+'?' الأعداد تُضَمّ معًا، فأجمع.':' أريد ما بقي أو الفرق، فأطرح.';
+    out.push({title:'أفهم المسألة',text:txt,eq:EQ(eqs.replace(/= .*$/,'= ؟')),blocks:counters(x.nums,x.op),tbl:{vals:{}}});
+    out.push({title:'أكتب جملة عددية وأحلّها',text:'أحسب الناتج، ثم أعود وأتحقق: هل إجابتي معقولة؟',eq:EQ(eqs),blocks:`<div class="blocks">${numBlocks(ans)}</div>`,tbl:numTbl(ans)});
+    return out},
+  group10(p){const n=p.answer,t=Math.floor(n/10),u=n%10;
+    const boxes=Array.from({length:t},()=>`<div class="ten-box">${'<div class="cube"></div>'.repeat(10)}</div>`).join('');
+    return[{title:'أكوّن عشرات',text:`أضع كل ١٠ مكعبات معًا: تكوّنت ${ar(t)} ${tensWord(t)}، وبقي ${ar(u)} آحاد.`,eq:EQ(`${ar(n)} آحادًا = ${ar(t)} ${tensWord(t)} و ${ar(u)} آحاد`),blocks:`<div class="blocks"><div class="grp">${boxes}${cubes(u)}</div></div>`,tbl:numTbl(n)}]},
+  pvDigit(p){const n=p.n,t=Math.floor(n/10),u=n%10;
+    return[{title:'أحدّد منزلة الرقم',text:p.which==='t'?`الرقم ${ar(t)} في منزلة العشرات، فقيمته ${ar(t)} عشرات = ${ar(t*10)}.`:`الرقم ${ar(u)} في منزلة الآحاد، فقيمته ${ar(u)}.`,eq:EQ(`${ar(n)} = ${ar(t*10)} + ${ar(u)}`),blocks:`<div class="blocks">${numBlocks(n)}</div>`,tbl:{vals:{}}}]},
+  logic(p){const ans=p.answer;
+    if(p.kind===0)return[{title:'أستبعد الاحتمالات',text:`رقم العشرات ${ar(p.t)}. الآحاد أكبر من ${ar(p.lo)} وأصغر من ${ar(p.hi)}، فالرقم الوحيد بينهما هو ${ar(p.u)}.`,eq:EQ(`${ar(p.t)} عشرات و ${ar(p.u)} آحاد = ${ar(ans)}`),blocks:numberLine(p.lo,p.hi,p.u,p.u,1),tbl:numTbl(ans)}];
+    if(p.kind===1){const rows=[];for(let t=1;t<=9;t++){const u=p.sm-t;if(u>=0&&u<=9&&t>=u)rows.push([t,u])}
+      return[{title:'أكتب الاحتمالات',text:`أبحث عن رقمين مجموعهما ${ar(p.sm)}، ثم أختار الزوج الذي يكون فيه الفرق ${ar(p.d)}.`,eq:EQ(`${ar(p.t)} + ${ar(p.u)} = ${ar(p.sm)} ، ${ar(p.t)} ${MINUS} ${ar(p.u)} = ${ar(p.d)}`),
+        blocks:`<table class="dt" dir="rtl"><tr><th>العشرات</th><th>الآحاد</th><th>الفرق</th></tr>${rows.map(([t,u])=>`<tr><td class="num">${ar(t)}</td><td class="num">${ar(u)}</td><td class="num${t-u===p.d?' q':''}">${ar(t-u)}</td></tr>`).join('')}</table>`,tbl:numTbl(ans)}]}
+    return[{title:'أستبعد الاحتمالات',text:`الأعداد الأكبر من ${ar(p.lo)} والأصغر من ${ar(p.hi)} هما: ${ar(p.lo+1)} و ${ar(p.lo+2)}. أستبعد ${ar(p.ex)}، فيبقى ${ar(ans)}.`,eq:EQ(ar(ans)),blocks:numberLine(p.lo,p.hi,ans,ans,1),tbl:numTbl(ans)}]},
+  props(p){if(p.kind==='swap')return[{title:'خاصية الإبدال',text:'تغيير ترتيب العددين لا يغيّر ناتج الجمع.',eq:EQ(`${ar(p.a)} + ${ar(p.b)} = ${ar(p.b)} + ${ar(p.a)} = ${ar(p.a+p.b)}`),blocks:pairCubes(p.a,p.b),tbl:numTbl(p.a)}];
+    return[{title:'جمع الصفر',text:'ناتج جمع الصفر إلى أي عدد يساوي ذلك العدد دائمًا.',eq:EQ(`${ar(p.a)} + ٠ = ${ar(p.a)}`),blocks:`<div class="blocks">${numBlocks(p.a)}</div>`,tbl:numTbl(p.a)}]},
+  dblSub(p){const[a,b]=p.nums;return[{title:'أستعمل حقيقة العدد ونفسه',text:`أعرف أن ${ar(b)} + ${ar(b)} = ${ar(a)}.`,eq:EQ(`${ar(b)} + ${ar(b)} = ${ar(a)}`),blocks:pairCubes(b,b),tbl:{vals:{}}},
+    {title:'أكتب ناتج الطرح',text:`إذا أخذت ${ar(b)} من ${ar(a)} يبقى ${ar(b)}.`,eq:EQ(`${ar(a)} ${MINUS} ${ar(b)} = ${ar(b)}`),blocks:pairCubes(b,b).replace(/(<div class="grp">)(<div class="cubes ">)/,'$1<div class="cubes " style="opacity:.3">'),tbl:finalTbl(b)}]},
+  guess(p){const rows=[];for(let sm=Math.max(1,p.sm-2);sm<=p.sm;sm++){const bg=sm+p.d;rows.push([sm,bg,sm+bg])}
+    return[{title:'أخمّن وأتحقق',text:`أخمّن العدد الأصغر، ثم أضيف ${ar(p.d)} لأجد الأكبر، وأتحقق: هل المجموع ${ar(p.s)}؟`,eq:EQ(`${ar(p.sm)} + ${ar(p.bg)} = ${ar(p.s)}`),
+      blocks:`<table class="dt" dir="rtl"><tr><th>الأصغر</th><th>الأكبر</th><th>المجموع</th></tr>${rows.map(r=>`<tr><td class="num">${ar(r[0])}</td><td class="num">${ar(r[1])}</td><td class="num${r[2]===p.s?' q':''}">${ar(r[2])}${r[2]===p.s?' ✓':''}</td></tr>`).join('')}</table>`,tbl:numTbl(p.answer)},
+      {title:'الإجابة',text:p.askBig?`العدد الأكبر هو ${ar(p.bg)}.`:`العدد الأصغر هو ${ar(p.sm)}.`,eq:EQ(ar(p.answer)),blocks:'',tbl:numTbl(p.answer)}]},
+  missing(p){return[{title:'أستعمل حقيقة طرح',text:`أفكّر: ${ar(p.s)} ${MINUS} ${ar(p.a)} = ؟`,eq:EQ(`${ar(p.s)} ${MINUS} ${ar(p.a)} = ${ar(p.answer)}`),blocks:pairCubes(p.a,p.answer),tbl:{vals:{}}},
+    {title:'أكتب العدد المفقود',text:'أتحقق بالجمع.',eq:EQ(`${ar(p.a)} + ${ar(p.answer)} = ${ar(p.s)}`),blocks:'',tbl:numTbl(p.answer)}]},
+  family(p){const{a,b,s}=p;return[{title:'الحقائق المترابطة',text:`الأعداد الثلاثة هي ${ar(a)} و ${ar(b)} و ${ar(s)}. كل حقيقة تستعملها:`,
+    eq:EQ(`${ar(a)} + ${ar(b)} = ${ar(s)}`)+EQ(`${ar(b)} + ${ar(a)} = ${ar(s)}`)+EQ(`${ar(s)} ${MINUS} ${ar(a)} = ${ar(b)}`)+EQ(`${ar(s)} ${MINUS} ${ar(b)} = ${ar(a)}`),blocks:'',tbl:numTbl(p.answer)}]},
+  tally(p){const v=p.d.vals[p.i],f=Math.floor(v/5),r=v%5,seq=[];for(let k=1;k<=f;k++)seq.push(k*5);for(let k=1;k<=r;k++)seq.push(f*5+k);
+    return[{title:'أعدّ الإشارات خمسات',text:`كل حزمة مشطوبة = ٥. أعدّ: ${seq.map(ar).join('، ')}.`,eq:EQ(`${p.d.cats[p.i]}: ${ar(v)}`),blocks:`<div class="blocks">${tallySVG(v)}</div>`,tbl:numTbl(v)}]},
+  pict(p){const v=p.d.vals[p.i];return[{title:'أعدّ الصور',text:`كل صورة تمثّل ١. في صف «${p.d.cats[p.i]}» ${ar(v)} صور.`,eq:EQ(ar(v)),blocks:`<div class="picrow">${'<span class="pic"></span>'.repeat(v)}</div>`,tbl:numTbl(v)}]},
+  bar(p){const v=p.d.vals[p.i];return[{title:'أقرأ طول العمود',text:`أنظر إلى أعلى عمود «${p.d.cats[p.i]}»، ثم أتتبّع الخط إلى المحور: ${ar(v)}.`,eq:EQ(ar(v)),blocks:barSVG(p.d,p.i),tbl:numTbl(v)}]},
+  readMost(p){const d=p.d,c=d.cats[p.correct],vis=p.kind==='bar'?barSVG(d,p.correct):pictTable(d);
+    return[{title:p.most?'أبحث عن الأكثر':'أبحث عن الأقل',text:`${d.cats.map((x,i)=>`${x}: ${ar(d.vals[i])}`).join('، ')}. ${p.most?'أكبر':'أصغر'} عدد هو ${ar(d.vals[p.correct])}، إذن الإجابة: ${c}.`,eq:EQ(c),blocks:vis,tbl:{vals:{}}}]},
+  readDiff(p){const d=p.d,x=d.vals[p.a],y=d.vals[p.b];return[{title:'أقرأ العددين ثم أطرح',text:`${d.cats[p.a]}: ${ar(x)}، و${d.cats[p.b]}: ${ar(y)}.`,eq:EQ(`${ar(x)} ${MINUS} ${ar(y)} = ${ar(x-y)}`),blocks:p.kind==='bar'?barSVG(d):'',tbl:numTbl(x-y)}]},
+  readSum(p){const d=p.d,x=d.vals[p.a],y=d.vals[p.b];return[{title:'أقرأ العددين ثم أجمع',text:`${d.cats[p.a]}: ${ar(x)}، و${d.cats[p.b]}: ${ar(y)}.`,eq:EQ(`${ar(x)} + ${ar(y)} = ${ar(x+y)}`),blocks:p.kind==='bar'?barSVG(d):'',tbl:numTbl(x+y)}]},
+  table(p){const rows=Array.from({length:p.n},(_,i)=>i+1);return[{title:'أكمل الجدول',text:`أضيف ${ar(p.k)} في كل خانة.`,eq:EQ(rows.map(r=>ar(p.k*r)).join('، ')),
+    blocks:seqHTML(rows.map(r=>p.k*r),{step:`+${ar(p.k)}`,ansIdx:p.n-1}),tbl:numTbl(p.answer)}]},
+  certain(p){const ev=p.ev,has=p.counts.some(c=>c[0]===ev),all=p.counts.length===1&&has;
+    const txt=all?`كل الكرات في الكيس ${ev.f}، فسحب كرة ${ev.f} حدث أكيد.`:has?`في الكيس كرات ${ev.f} وكرات بلون آخر، فسحب كرة ${ev.f} حدث ممكن.`:`لا توجد في الكيس أي كرة ${ev.f}، فسحب كرة ${ev.f} حدث مستحيل.`;
+    return[{title:'أنظر إلى الكيس',text:txt,eq:EQ(['أكيد','ممكن','مستحيل'][p.correct]),blocks:bagHTML(p.counts),tbl:{vals:{}}}]},
+  likely(p){const c=p.counts[p.correct];return[{title:'أعدّ الكرات من كل لون',text:`${p.counts.map(([c,n])=>`${c.n}: ${ar(n)}`).join('، ')}. اللون ${p.most?'الأكثر':'الأقل'} عددًا ${p.most?'أكثر':'أقل'} إمكانية للظهور.`,eq:EQ(c[0].n),blocks:bagHTML(p.counts),tbl:{vals:{}}}]},
+  tensAdd(p){const[a,b]=p.nums,a1=a/10,b1=b/10,ans=a+b;return[
+    {title:'أجمع العشرات',text:`${ar(a)} = ${ar(a1)} ${tensWord(a1)}، و ${ar(b)} = ${ar(b1)} ${tensWord(b1)}. أستعمل حقيقة الجمع:`,eq:EQ(`${ar(a1)} + ${ar(b1)} = ${ar(a1+b1)}`),blocks:`<div class="blocks"><div class="grp">${rods(a1)}</div><span class="op">+</span><div class="grp">${rods(b1)}</div></div>`,tbl:{vals:{o:0,t:a1+b1},hl:'t'}},
+    {title:'الناتج',text:`${ar(a1+b1)} عشرات = ${ar(ans)}`,eq:EQ(`${ar(a)} + ${ar(b)} = ${ar(ans)}`),blocks:`<div class="blocks">${numBlocks(ans)}</div>`,tbl:finalTbl(ans)}]},
+  on2(p){const[a,b]=p.nums,ans=a+b;if(b<10)return SPECIAL.counton({nums:[a,b]});const k=b/10,seq=[a];for(let i=1;i<=k;i++)seq.push(a+i*10);
+    return[{title:'أعدّ عشرة عشرة',text:`${ar(b)} = ${ar(k)} ${tensWord(k)}، فأعدّ ${ar(k)} ${k>1?'مرات':'مرة'} بالعشرات بدءًا من ${ar(a)}.`,eq:EQ(`${ar(a)} + ${ar(b)} = ${ar(ans)}`),blocks:seqHTML(seq,{step:'+١٠',ansIdx:k}),tbl:finalTbl(ans)}]},
+  back2(p){const[a,b]=p.nums,ans=a-b;if(b<10)return SPECIAL.countback({nums:[a,b]});const k=b/10,seq=[a];for(let i=1;i<=k;i++)seq.push(a-i*10);
+    return[{title:'أعدّ عشرة عشرة إلى الخلف',text:`${ar(b)} = ${ar(k)} ${tensWord(k)}، فأعدّ ${ar(k)} ${k>1?'مرات':'مرة'} إلى الخلف بالعشرات بدءًا من ${ar(a)}.`,eq:EQ(`${ar(a)} ${MINUS} ${ar(b)} = ${ar(ans)}`),blocks:seqHTML(seq,{step:`${MINUS}١٠`,ansIdx:k}),tbl:finalTbl(ans)}]},
+  est2(p){const{a,b}=p,ra=round10(a),rb=round10(b),sg=p.op==='+'?'+':MINUS;
+    const why=n=>{const u=n%10;return u>=5?`رقم الآحاد ${ar(u)} (٥ أو أكثر)، فأقرّب إلى أعلى: ${ar(round10(n))}.`:`رقم الآحاد ${ar(u)} (أقل من ٥)، فأقرّب إلى أدنى: ${ar(round10(n))}.`};
+    const nl=n=>{const lo=Math.floor(n/10)*10;return numberLine(lo,lo+10,n,round10(n),round10(n)>=n?1:-1)};
+    return[{title:`أقرّب ${ar(a)}`,text:why(a),eq:EQ(`${ar(a)} ← ${ar(ra)}`),blocks:nl(a),tbl:{vals:{}}},
+      {title:`أقرّب ${ar(b)}`,text:why(b),eq:EQ(`${ar(b)} ← ${ar(rb)}`),blocks:nl(b),tbl:{vals:{}}},
+      {title:'أحسب بالأعداد المقرّبة',text:'الناتج تقديري، وهو قريب من الناتج الفعلي.',eq:EQ(`${ar(ra)} ${sg} ${ar(rb)} = ${ar(p.answer)}`),blocks:'',tbl:numTbl(p.answer)}]},
   pv(p){const n=p.answer,t=Math.floor(n/10),u=n%10;return[
     {title:'أعدّ العشرات',text:`أعدّ الأعمدة البرتقالية. كل عمود = ١٠.`,eq:EQ(`${ar(t)} ${tensWord(t)} = ${ar(t*10)}`),blocks:`<div class="blocks"><div class="grp">${rods(t)}</div>${label(`${ar(t)} ${tensWord(t)}`)}</div>`,tbl:{vals:{t},hl:'t'}},
     {title:'أعدّ الآحاد',text:`أعدّ المكعبات الخضراء المفردة.`,eq:EQ(`${ar(u)} آحاد`),blocks:`<div class="blocks"><div class="grp">${cubes(u)||label('لا توجد آحاد: أكتب ٠')}</div></div>`,tbl:numTbl(n,'o')},
@@ -623,7 +886,7 @@ const SPECIAL={
     out.push({title:'الجملة الصحيحة',text:`${ar(a)} ${word} ${ar(b)}. الجهة المفتوحة من الإشارة تكون نحو العدد الأكبر.`,eq:EQ(relHTML(a,b,rel)),blocks:'',tbl:{vals:{}}});
     return out},
   pat(p){const st=p.step,ans=p.answer,sgn=st>0?'+':MINUS,abs=Math.abs(st);
-    const txt=abs===10?(st>0?'يزيد كل عدد ١٠: رقم الآحاد يبقى كما هو، ورقم العشرات يزيد ١ (ننزل صفًا في لوحة المئة).':'ينقص كل عدد ١٠: رقم الآحاد يبقى كما هو، ورقم العشرات ينقص ١ (نصعد صفًا في لوحة المئة).')
+    const txt=abs!==10&&abs!==1?(st>0?`يزيد كل عدد ${ar(abs)}، فأضيف ${ar(abs)} إلى آخر عدد.`:`ينقص كل عدد ${ar(abs)}، فأطرح ${ar(abs)} من آخر عدد.`):abs===10?(st>0?'يزيد كل عدد ١٠: رقم الآحاد يبقى كما هو، ورقم العشرات يزيد ١ (ننزل صفًا في لوحة المئة).':'ينقص كل عدد ١٠: رقم الآحاد يبقى كما هو، ورقم العشرات ينقص ١ (نصعد صفًا في لوحة المئة).')
       :(st>0?'يزيد كل عدد ١: ننتقل إلى العدد التالي في لوحة المئة.':'ينقص كل عدد ١: ننتقل إلى العدد السابق في لوحة المئة.');
     return[{title:'أكتشف القاعدة',text:txt,eq:EQ(`${ar(p.terms[3])} ${sgn} ${ar(abs)} = ${ar(ans)}`),blocks:seqHTML([...p.terms,ans],{step:`${sgn}${ar(abs)}`,ansIdx:4}),tbl:numTbl(ans)}]},
   skip(p){const st=p.step,ans=p.answer,nm=['','','اثنين اثنين','','','خمسة خمسة','','','','','عشرة عشرة'][st];
