@@ -56,6 +56,8 @@ button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .idea b{font-family:var(--f-display);font-size:1.05rem}
 .idea p{margin:2px 0 0}
 .levels{display:grid;gap:10px}
+.grp-h{font-size:1.15rem;font-weight:800;color:var(--muted);margin-top:8px}
+.grp-h:first-child{margin-top:0}
 .lvl{display:grid;grid-template-columns:1fr auto;align-items:center;gap:4px 12px;text-align:right;background:var(--surface);border:2px solid var(--line);border-radius:16px;padding:12px 16px;box-shadow:var(--shadow)}
 .lvl:hover{border-color:var(--accent)}
 .lvl h3{font-size:1.12rem;font-weight:700}
@@ -150,6 +152,14 @@ button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .gone::after{content:"";position:absolute;inset:-2px;background:linear-gradient(135deg,transparent 45%,var(--bad) 45%,var(--bad) 58%,transparent 58%)}
 .new-ones .cube{outline:2px solid var(--accent);outline-offset:-1px}
 .arrow{font-family:var(--f-display);font-weight:800;font-size:1.5rem;color:var(--accent);align-self:center}
+.nl{direction:ltr;display:flex;flex-wrap:wrap;gap:3px;justify-content:center;width:100%}
+.nlc{display:flex;flex-direction:column;align-items:center;min-width:30px}
+.nlc .hop{font-size:.8rem;font-weight:700;color:var(--accent);height:1.3em;line-height:1.3em}
+.nlc b{display:block;width:100%;text-align:center;border-top:3px solid var(--ink);padding-top:2px;font-family:var(--f-display);font-size:1.15rem;font-variant-numeric:tabular-nums}
+.nlc.st b{color:var(--accent);box-shadow:inset 0 0 0 2px var(--accent);border-radius:0 0 6px 6px}
+.nlc.hp b{background:var(--accent-soft);border-radius:0 0 6px 6px}
+.nlc.end b{background:var(--accent);color:var(--accent-ink);border-radius:0 0 6px 6px}
+.step-eq + .step-eq{margin-top:-8px}
 .blabel{width:100%;text-align:center;font-size:.85rem;color:var(--muted);direction:rtl}
 
 /* results */
@@ -246,19 +256,43 @@ const G={
   add3(){for(;;){const n=[rnd(10,39),rnd(10,39),rnd(10,39)],s=n[0]+n[1]+n[2],o=n[0]%10+n[1]%10+n[2]%10;if(s<100&&(o>=10||Math.random()<.25))return{op:'+',nums:n}}},
   sub0(){for(;;){const a=rnd(20,99),b=Math.random()<.4?rnd(1,9):rnd(10,a-1);if(b%10<=a%10&&b<a)return{op:'-',nums:[a,b]}}},
   sub1(){for(;;){const a=rnd(20,99),b=Math.random()<.35?rnd(2,9):rnd(11,a-1);if(b%10>a%10&&b<a)return{op:'-',nums:[a,b]}}},
+  // addition facts
+  fOn(){const a=rnd(3,15),b=rnd(1,3);return{op:'+',nums:Math.random()<.3?[b,a]:[a,b],m:'counton'}},
+  fDbl(){const a=rnd(2,9);if(Math.random()<.6||a===9)return{op:'+',nums:[a,a],m:'doubles'};return{op:'+',nums:Math.random()<.5?[a,a+1]:[a+1,a],m:'doubles'}},
+  fTen(){const a=rnd(7,9),b=rnd(11-a,9);return{op:'+',nums:Math.random()<.5?[a,b]:[b,a],m:'maketen'}},
+  fThree(){for(;;){const n=[rnd(1,9),rnd(1,9),rnd(1,9)];if(n[0]+n[1]+n[2]>=8)return{op:'+',nums:n,m:'three1'}}},
+  // subtraction facts
+  fBack(){const r=Math.random(),a=rnd(4,20);if(r<.12)return{op:'-',nums:[a,0],m:'countback'};if(r<.22)return{op:'-',nums:[a,a],m:'countback'};return{op:'-',nums:[a,rnd(1,3)],m:'countback'}},
+  fThink(){for(;;){const a=rnd(11,18),b=rnd(2,9),d=a-b;if(d>=2&&d<=9)return{op:'-',nums:[a,b],m:'thinkadd'}}},
+  // two-digit subtraction
+  subT(){const a=rnd(2,9),b=rnd(1,a-1);return{op:'-',nums:[a*10,b*10],m:'tens'}},
+  sub2(){for(;;){const a=rnd(20,99),b=rnd(2,9);if(b>a%10)return{op:'-',nums:[a,b]}}},
+  sub3(){for(;;){const a=rnd(30,99),b=rnd(11,a-10);if(b%10>a%10&&b<a)return{op:'-',nums:[a,b]}}},
+  chk(){const q=Math.random()<.65?G.sub1():G.sub0();const[a,b]=q.nums;return{op:'+',nums:[a-b,b],m:'check',orig:[a,b]}},
 };
+const GROUPS=['حقائق الجمع','حقائق الطرح','الجمع بأعداد من رقمين','الطرح بأعداد من رقمين','تحدّي'];
 const LEVELS=[
-  {id:'add0',kind:'add',name:'الجمع بدون إعادة تجميع',sub:'عدد من رقمين + عدد من رقم أو رقمين',tag:'٥-٤',ex:'١٥ + ٢٤',helpers:false},
-  {id:'add1',kind:'add',name:'جمع رقم واحد مع إعادة التجميع',sub:'عدد من رقمين + عدد من رقم واحد',tag:'٥-٦',ex:'١٧ + ٥',helpers:true},
-  {id:'add2',kind:'add',name:'جمع عددين من رقمين مع إعادة التجميع',sub:'نجمع الآحاد، ونعيد التجميع عند الضرورة',tag:'٥-٧',ex:'١٨ + ٢٥',helpers:true},
-  {id:'add3',kind:'add',name:'جمع ثلاثة أعداد',sub:'نبحث عن عددين مجموعهما ١٠',tag:'٥-٩',ex:'٣٦ + ١٤ + ٢٤',helpers:true},
-  {id:'sub0',kind:'sub',name:'الطرح بدون إعادة تجميع',sub:'نطرح الآحاد ثم العشرات',ex:'٤٨ − ٢٣',helpers:false},
-  {id:'sub1',kind:'sub',name:'الطرح مع إعادة التجميع',sub:'نأخذ عشرة عندما لا تكفي الآحاد',ex:'٤٣ − ١٧',helpers:true},
-  {id:'mix',kind:'mix',name:'تحدّي: جمع وطرح',sub:'مسائل منوّعة من كل الدروس',ex:'؟',helpers:true},
+  {id:'fOn',g:0,kind:'add',name:'أجمع بالعدّ التصاعدي',sub:'أبدأ بالعدد الأكبر وأعدّ إلى الأمام على خط الأعداد',ex:'٧ + ٣',helpers:false,hint:'ابدأ بالعدد الأكبر، ثم عُدّ إلى الأمام.'},
+  {id:'fDbl',g:0,kind:'add',name:'أجمع العدد ونفسه',sub:'الحقائق المتماثلة، والعدد ونفسه + ١',ex:'٦ + ٦',helpers:false,hint:'هل العددان متساويان أو متقاربان؟ استعمل حقيقة العدد ونفسه.'},
+  {id:'fTen',g:0,kind:'add',name:'أكوّن عشرة لأجد ناتج الجمع',sub:'أكمل العدد إلى ١٠ ثم أضيف الباقي',ex:'٩ + ٥',helpers:false,hint:'كم يحتاج العدد الأكبر ليصبح ١٠؟ خذه من العدد الآخر.'},
+  {id:'fThree',g:0,kind:'add',name:'أجمع ثلاثة أعداد',sub:'أبحث عن عددين مجموعهما ١٠ أو عددين متساويين',ex:'٧ + ٣ + ٥',helpers:false,hint:'ابحث عن عددين مجموعهما ١٠، أو عددين متساويين، واجمعهما أولًا.'},
+  {id:'fBack',g:1,kind:'sub',name:'أطرح بالعدّ التنازلي',sub:'أعدّ إلى الخلف، وأطرح الصفر والعدد من نفسه',ex:'٩ − ٢',helpers:false,hint:'ابدأ بالعدد الأول، ثم عُدّ إلى الخلف.'},
+  {id:'fThink',g:1,kind:'sub',name:'أطرح مستعملًا حقائق الجمع',sub:'الحقائق المترابطة: ٦ + ٧ = ١٣ إذن ١٣ − ٦ = ٧',ex:'١٣ − ٦',helpers:false,hint:'فكّر: أي عدد أجمعه مع العدد المطروح ليكون الناتج العدد الأول؟'},
+  {id:'add0',g:2,kind:'add',name:'الجمع بدون إعادة تجميع',sub:'عدد من رقمين + عدد من رقم أو رقمين',tag:'٥-٤',ex:'١٥ + ٢٤',helpers:false},
+  {id:'add1',g:2,kind:'add',name:'جمع رقم واحد مع إعادة التجميع',sub:'عدد من رقمين + عدد من رقم واحد',tag:'٥-٦',ex:'١٧ + ٥',helpers:true},
+  {id:'add2',g:2,kind:'add',name:'جمع عددين من رقمين مع إعادة التجميع',sub:'نجمع الآحاد، ونعيد التجميع عند الضرورة',tag:'٥-٧',ex:'١٨ + ٢٥',helpers:true},
+  {id:'add3',g:2,kind:'add',name:'جمع ثلاثة أعداد',sub:'نبحث عن عددين مجموعهما ١٠',tag:'٥-٩',ex:'٣٦ + ١٤ + ٢٤',helpers:true},
+  {id:'subT',g:3,kind:'sub',name:'أطرح العشرات',sub:'أستعمل حقائق الطرح: ٦ − ٤ = ٢ إذن ٦٠ − ٤٠ = ٢٠',ex:'٦٠ − ٤٠',helpers:false,hint:'اطرح العشرات كما تطرح الآحاد، ثم اكتب صفرًا في خانة الآحاد.'},
+  {id:'sub0',g:3,kind:'sub',name:'الطرح بدون إعادة تجميع',sub:'نطرح الآحاد ثم العشرات',ex:'٤٨ − ٢٣',helpers:false},
+  {id:'sub1',g:3,kind:'sub',name:'الطرح مع إعادة التجميع',sub:'نأخذ عشرة عندما لا تكفي الآحاد',ex:'٤٣ − ١٧',helpers:true},
+  {id:'sub2',g:3,kind:'sub',name:'أطرح عددًا من رقم واحد من عدد من رقمين',sub:'مع إعادة التجميع',ex:'٤٣ − ٧',helpers:true},
+  {id:'sub3',g:3,kind:'sub',name:'أطرح عددين كلٌّ منهما من رقمين',sub:'مع إعادة التجميع',ex:'٦٢ − ٢٨',helpers:true},
+  {id:'chk',g:3,kind:'add',name:'أستعمل الجمع للتحقق من ناتج الطرح',sub:'أجمع الناتج مع العدد المطروح',ex:'٢٦ + ١٧',helpers:true},
+  {id:'mix',g:4,kind:'mix',name:'تحدّي: جمع وطرح',sub:'مسائل منوّعة من كل الدروس',ex:'؟',helpers:true},
 ];
 function gen(lv){
-  if(lv.id==='mix'){return G[pick(['add0','add1','add2','add3','sub0','sub1'])]()}
-  return G[lv.id]();
+  const src=lv.id==='mix'?pick(LEVELS.filter(l=>l.id!=='mix')):lv;
+  const p=G[src.id]();p.src=src;return p;
 }
 function solve(p){
   if(p.op==='+'){
@@ -288,13 +322,13 @@ function show(id){['home','play','result'].forEach(s=>$(s).hidden=s!==id);window
 /* ---------- home ---------- */
 function renderHome(){
   $('totalPts').textContent=ar(store.total);
-  $('levels').innerHTML=LEVELS.map(l=>{
+  $('levels').innerHTML=GROUPS.map((gn,gi)=>`<h2 class="grp-h">${gn}</h2>`+LEVELS.filter(l=>l.g===gi).map(l=>{
     const b=store.best[l.id];
     return `<button class="lvl ${l.kind}" type="button" data-id="${l.id}">
       <h3>${l.name}${l.tag?`<span class="tag">درس <bdi dir="ltr">${l.tag}</bdi></span>`:''}</h3>
       <span class="ex">${l.ex}</span>
       <small>${l.sub}${b!=null?` · <span class="best">أفضل نتيجة: ${ar(b)} من ${ar(ROUND)}</span>`:''}</small>
-    </button>`}).join('');
+    </button>`}).join('')).join('');
 }
 $('levels').addEventListener('click',e=>{const b=e.target.closest('.lvl');if(b)start(LEVELS.find(l=>l.id===b.dataset.id))});
 
@@ -306,10 +340,10 @@ function start(lv){
 function next(){
   if(S.i>=ROUND)return finish();
   let p,key,tries=0;
-  do{p=gen(S.lv);key=p.op+p.nums.join(',');tries++}while(S.seen.has(key)&&tries<30);
+  do{p=gen(S.lv);key=(p.m||'')+p.op+p.nums.join(',');tries++}while(S.seen.has(key)&&tries<30);
   S.seen.add(key);
   p.sol=solve(p);
-  p.helpers=S.lv.helpers;
+  p.helpers=p.src.helpers;
   S.p=p;S.vals={};S.marks={};S.done=false;
   S.order=p.op==='+'?(p.helpers?['o','c','t']:['o','t']):(p.helpers?['rt','ro','o','t']:['o','t']);
   S.active=S.order[0];
@@ -317,8 +351,12 @@ function next(){
   $('progTxt').textContent='السؤال '+ar(S.i+1)+' من '+ar(ROUND);
   $('roundPts').textContent=ar(S.pts);
   const word=p.op==='+'?'الجمع':'الطرح';
-  $('taskTitle').innerHTML=`أجد ناتج ${word} <span class="eq" dir="rtl">${eqText(p)}</span>`;
-  $('hintLine').textContent=p.op==='+'
+  $('taskTitle').innerHTML=p.m==='check'
+    ?`أتحقق بالجمع <span class="eq" dir="rtl">${eqText(p)}</span>`
+    :`أجد ناتج ${word} <span class="eq" dir="rtl">${eqText(p)}</span>`;
+  $('hintLine').textContent=p.m==='check'
+    ?`هل ${ar(p.orig[0])} ${MINUS} ${ar(p.orig[1])} = ${ar(p.nums[0])}؟ أجمع الناتج مع العدد المطروح، فإذا كان المجموع ${ar(p.orig[0])} فالطرح صحيح.`
+    :p.src.hint?p.src.hint:p.op==='+'
     ?(p.helpers?'ابدأ بالآحاد. إذا كان مجموعها ١٠ أو أكثر، اكتب العشرة في المربع الصغير فوق العشرات.':'ابدأ بجمع الآحاد، ثم اجمع العشرات.')
     :(p.helpers?'ابدأ بالآحاد. إذا كانت لا تكفي، خذ عشرة واكتب العددين الجديدين في المربعين الصغيرين.':'ابدأ بطرح الآحاد، ثم اطرح العشرات.');
   $('fb').hidden=true;$('explainBox').hidden=true;$('nextArea').hidden=true;$('inputArea').hidden=false;
@@ -418,6 +456,7 @@ function check(){
   if(right){
     let gain=10,msg=pick(['أحسنت! إجابة صحيحة.','ممتاز! أنت بطل.','رائع! استمر.','صحيح! عمل جميل.']);
     if(helperUsed&&helperOk){gain+=2;msg+=' (+٢ لأنك كتبت إعادة التجميع)'}
+    if(p.m==='check')msg+=' المجموع يساوي العدد الأول، إذن ناتج الطرح صحيح.';
     S.streak++;S.correct++;
     if(S.streak%3===0){gain+=5;msg+=` · ${ar(S.streak)} إجابات متتالية: +٥ مكافأة`}
     S.pts+=gain;store.total+=gain;save();
@@ -447,7 +486,91 @@ function numBlocks(n){return `<div class="grp">${rods(Math.floor(n/10))}${cubes(
 const label=t=>`<div class="blabel">${t}</div>`;
 
 /* ---------- explanation steps ---------- */
+function numberLine(from,to,start,end,dir){
+  const cells=[];
+  for(let n=from;n<=to;n++){
+    let cls='',hop='';
+    if(n===start)cls='st';
+    const inHop=dir>0?(n>start&&n<=end):(n<start&&n>=end);
+    if(inHop){cls=n===end?'end':'hp';hop=ar(Math.abs(n-start))}
+    cells.push(`<div class="nlc ${cls}"><span class="hop">${hop}</span><b>${ar(n)}</b></div>`);
+  }
+  return `<div class="nl">${cells.join('')}</div>`;
+}
+const EQ=t=>`<div class="step-eq" dir="rtl">${t}</div>`;
+const finalTbl=ans=>({vals:{o:ans%10,t:Math.floor(ans/10)||''},hl:null});
+const pairCubes=(x,y,op='+')=>`<div class="blocks"><div class="grp">${cubes(x)}</div><span class="op">${op}</span><div class="grp">${cubes(y)}</div></div>`;
+const SPECIAL={
+  counton(p){
+    const[x,y]=p.nums,big=Math.max(x,y),small=Math.min(x,y),ans=x+y,out=[];
+    out.push({title:'أبدأ بالعدد الأكبر',text:x<y?`العدد الأكبر هو ${ar(big)}. أبدأ به لأن العدّ منه أسرع.`:`أبدأ بالعدد الأكبر ${ar(big)}.`,eq:EQ(`${ar(big)} + ${ar(small)}`),
+      blocks:numberLine(big-1,big+small+1,big,big,1),tbl:{vals:{},hl:null}});
+    out.push({title:'أعدّ إلى الأمام',text:`أعدّ ${ar(small)} ${small>1?'خطوات':'خطوة'} إلى الأمام: ${Array.from({length:small},(_,i)=>ar(big+i+1)).join('، ')}.`,eq:EQ(`${ar(big)} + ${ar(small)} = ${ar(ans)}`),
+      blocks:numberLine(big-1,big+small+1,big,ans,1),tbl:{...finalTbl(ans),hl:'o'}});
+    out.push({title:'الناتج',text:'ترتيب العددين في الجمع لا يغيّر الناتج.',eq:EQ(`${ar(x)} + ${ar(y)} = ${ar(ans)}`),blocks:numberLine(big-1,big+small+1,big,ans,1),tbl:finalTbl(ans)});
+    return out;
+  },
+  doubles(p){
+    const[x,y]=p.nums,a=Math.min(x,y),ans=x+y,out=[];
+    if(x===y){
+      out.push({title:'أجمع العدد ونفسه',text:`العددان متساويان، فأستعمل الحقيقة المتماثلة: ${ar(a)} و ${ar(a)}.`,eq:EQ(`${ar(a)} + ${ar(a)} = ${ar(ans)}`),blocks:pairCubes(a,a),tbl:{...finalTbl(ans),hl:'o'}});
+    }else{
+      out.push({title:'أجد حقيقة متماثلة قريبة',text:`${ar(a+1)} أكبر من ${ar(a)} بواحد، فأجمع ${ar(a)} + ${ar(a)} أولًا.`,eq:EQ(`${ar(a)} + ${ar(a)} = ${ar(2*a)}`),blocks:pairCubes(a,a),tbl:{vals:{},hl:null}});
+      out.push({title:'أضيف واحدًا',text:'أضيف الواحد الباقي إلى الناتج.',eq:EQ(`${ar(2*a)} + ١ = ${ar(ans)}`),blocks:pairCubes(a,a+1),tbl:{...finalTbl(ans),hl:'o'}});
+    }
+    out.push({title:'الناتج',text:x===y?`حقيقة العدد ونفسه: ${ar(a)} + ${ar(a)} = ${ar(ans)}.`:`العدد ونفسه + ١.`,eq:EQ(`${ar(x)} + ${ar(y)} = ${ar(ans)}`),blocks:`<div class="blocks">${numBlocks(ans)}</div>`,tbl:finalTbl(ans)});
+    return out;
+  },
+  maketen(p){
+    const[x,y]=p.nums,big=Math.max(x,y),small=Math.min(x,y),need=10-big,rest=small-need,ans=x+y,out=[];
+    out.push({title:'أكوّن عشرة',text:`يحتاج ${ar(big)} إلى ${ar(need)} ليصبح ١٠. آخذ ${ar(need)} من ${ar(small)}، فيبقى ${ar(rest)}.`,eq:EQ(`${ar(small)} = ${ar(need)} + ${ar(rest)}`),
+      blocks:`<div class="blocks"><div class="grp"><div class="ten-box">${'<div class="cube"></div>'.repeat(10)}</div>${cubes(rest)}</div>${label(`${ar(big)} + ${ar(need)} = ١٠`)}</div>`,tbl:{vals:{},hl:null}});
+    out.push({title:'أجمع العشرة والباقي',text:`عشرة واحدة و ${ar(rest)} آحاد.`,eq:EQ(`١٠ + ${ar(rest)} = ${ar(ans)}`),blocks:`<div class="blocks">${numBlocks(ans)}</div>`,tbl:{...finalTbl(ans),hl:'o'}});
+    out.push({title:'الناتج',text:'تكوين عشرة يجعل الجمع أسهل.',eq:EQ(`${ar(x)} + ${ar(y)} = ${ar(ans)}`),blocks:`<div class="blocks">${numBlocks(ans)}</div>`,tbl:finalTbl(ans)});
+    return out;
+  },
+  three1(p){
+    const n=p.nums,ans=n[0]+n[1]+n[2],out=[];let i=0,j=1,why='أجمع العددين الأولين.';
+    found:for(let a=0;a<3;a++)for(let b=a+1;b<3;b++)if(n[a]+n[b]===10){i=a;j=b;why=`${ar(n[a])} و ${ar(n[b])} مجموعهما ١٠، فأجمعهما أولًا.`;break found}
+    if(why.startsWith('أجمع'))found2:for(let a=0;a<3;a++)for(let b=a+1;b<3;b++)if(n[a]===n[b]){i=a;j=b;why=`${ar(n[a])} و ${ar(n[b])} متساويان، فأجمعهما أولًا.`;break found2}
+    const k=3-i-j,pq=n[i]+n[j];
+    out.push({title:'أجمع عددين أولًا',text:why,eq:EQ(`${ar(n[i])} + ${ar(n[j])} = ${ar(pq)}`),blocks:pairCubes(n[i],n[j]),tbl:{vals:{},hl:null}});
+    out.push({title:'أضيف العدد الثالث',text:`أضيف ${ar(n[k])} إلى ${ar(pq)}.`,eq:EQ(`${ar(pq)} + ${ar(n[k])} = ${ar(ans)}`),blocks:`<div class="blocks">${numBlocks(ans)}</div>`,tbl:{...finalTbl(ans),hl:'o'}});
+    out.push({title:'الناتج',text:'يمكنني أن أجمع الأعداد بأي ترتيب، والناتج لا يتغيّر.',eq:EQ(`${n.map(ar).join(' + ')} = ${ar(ans)}`),blocks:`<div class="blocks">${numBlocks(ans)}</div>`,tbl:finalTbl(ans)});
+    return out;
+  },
+  countback(p){
+    const[a,b]=p.nums,ans=a-b,out=[];
+    if(b===0){
+      out.push({title:'أطرح صفرًا',text:'عندما أطرح صفرًا، لا آخذ شيئًا، فيبقى العدد كما هو.',eq:EQ(`${ar(a)} ${MINUS} ٠ = ${ar(a)}`),blocks:`<div class="blocks">${numBlocks(a)}</div>`,tbl:finalTbl(ans)});
+      return out;
+    }
+    if(b===a){
+      out.push({title:'أطرح العدد من نفسه',text:'عندما أطرح العدد من نفسه، آخذ كل الأشياء، فيبقى صفر.',eq:EQ(`${ar(a)} ${MINUS} ${ar(a)} = ٠`),blocks:a<=10?`<div class="blocks"><div class="cubes">${'<div class="cube gone"></div>'.repeat(a)}</div></div>`:`<div class="blocks">${label('لا يبقى شيء')}</div>`,tbl:finalTbl(ans)});
+      return out;
+    }
+    out.push({title:'أبدأ بالعدد الأول',text:`أضع إصبعي على ${ar(a)} في خط الأعداد.`,eq:EQ(`${ar(a)} ${MINUS} ${ar(b)}`),blocks:numberLine(ans-1,a+1,a,a,-1),tbl:{vals:{},hl:null}});
+    out.push({title:'أعدّ إلى الخلف',text:`أعدّ ${ar(b)} ${b>1?'خطوات':'خطوة'} إلى الخلف: ${Array.from({length:b},(_,i)=>ar(a-i-1)).join('، ')}.`,eq:EQ(`${ar(a)} ${MINUS} ${ar(b)} = ${ar(ans)}`),blocks:numberLine(ans-1,a+1,a,ans,-1),tbl:finalTbl(ans)});
+    return out;
+  },
+  thinkadd(p){
+    const[a,b]=p.nums,d=a-b,out=[];
+    out.push({title:'أفكّر في حقيقة جمع',text:`أسأل نفسي: ${ar(b)} + كم = ${ar(a)}؟`,eq:EQ(`${ar(b)} + ${ar(d)} = ${ar(a)}`),blocks:pairCubes(b,d),tbl:{vals:{},hl:null}});
+    out.push({title:'أستعمل الحقائق المترابطة',text:'هذه الأعداد الثلاثة تكوّن حقائق مترابطة:',
+      eq:EQ(`${ar(b)} + ${ar(d)} = ${ar(a)}`)+EQ(`${ar(d)} + ${ar(b)} = ${ar(a)}`)+EQ(`${ar(a)} ${MINUS} ${ar(b)} = ${ar(d)}`)+EQ(`${ar(a)} ${MINUS} ${ar(d)} = ${ar(b)}`),
+      blocks:'',tbl:finalTbl(d)});
+    return out;
+  },
+  tens(p){
+    const[a,b]=p.nums,a1=a/10,b1=b/10,d1=a1-b1,ans=a-b,out=[];
+    out.push({title:'أطرح العشرات',text:`${ar(a)} = ${ar(a1)} عشرات، و ${ar(b)} = ${ar(b1)} ${b1>1?'عشرات':'عشرة'}. أستعمل حقيقة الطرح:`,eq:EQ(`${ar(a1)} ${MINUS} ${ar(b1)} = ${ar(d1)}`),
+      blocks:`<div class="blocks"><div class="grp">${rods(d1)}${Array.from({length:b1},()=>`<div class="rod gone">${'<i></i>'.repeat(10)}</div>`).join('')}</div>${label(`نشطب ${ar(b1)} ${b1>1?'عشرات':'عشرة'}`)}</div>`,tbl:{vals:{o:0,t:d1},hl:'t'}});
+    out.push({title:'الناتج',text:`${ar(d1)} ${d1>1?'عشرات':'عشرة'} = ${ar(ans)}`,eq:EQ(`${ar(a)} ${MINUS} ${ar(b)} = ${ar(ans)}`),blocks:`<div class="blocks">${numBlocks(ans)}</div>`,tbl:finalTbl(ans)});
+    return out;
+  },
+};
 function steps(p){
+  if(p.m&&SPECIAL[p.m])return SPECIAL[p.m](p);
   const s=p.sol,out=[],eq=t=>`<div class="step-eq" dir="rtl">${t}</div>`;
   if(p.op==='+'){
     const ones=p.nums.map(n=>n%10),opsJoin=a=>a.map(ar).join(' + ');
@@ -508,6 +631,7 @@ function steps(p){
       blocks:`<div class="blocks">${numBlocks(s.ans)}</div>`,
       tbl:{vals:{rt:s.borrow?s.nt:'',ro:s.borrow?s.no:'',o:s.ans%10,t:tt||''},hl:null,struck:s.borrow}});
   }
+  if(p.m==='check'){const f=out[out.length-1];f.text+=`. المجموع يساوي ${ar(p.orig[0])}، إذن ${ar(p.orig[0])} ${MINUS} ${ar(p.orig[1])} = ${ar(p.nums[0])} صحيح.`}
   return out;
 }
 let EX=null;
